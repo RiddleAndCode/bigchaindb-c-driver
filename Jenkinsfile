@@ -1,5 +1,5 @@
 node('builder'){
-    docker.image('riddleandcode/wallet-builder').inside('-u "root"') {
+    docker.image('riddleandcode/wallet-builder').inside('-u "root" --cap-add SYS_PTRACE') {
         try {
             checkout scm
             stage('Generating build') {
