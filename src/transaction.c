@@ -43,20 +43,20 @@ char* bigchain_build_json_inputs(BIGCHAIN_INPUT *inputs, uint8_t num_inputs, cha
   for(uint8_t i = 0; i < num_inputs; i++) {
     p = json_objOpen(p, NULL);
     if(inputs[i].fulfillment[0] != '\0') {
-      p = json_str(p, "fulfillment", inputs[0].fulfillment);
+      p = json_str(p, "fulfillment", inputs[i].fulfillment);
     } else {
       p = json_null(p, "fulfillment");
     }
 
     if(inputs[i].fulfills[0] != '\0') {
-      p = json_str(p, "fulfills", inputs[0].fulfills);
+      p = json_str(p, "fulfills", inputs[i].fulfills);
     } else {
       p = json_null(p, "fulfills");
     }
 
     p = json_arrOpen(p, "owners_before");
-    for (uint8_t j = 0; j < inputs[0].num_owners; j++) {
-      p = json_str(p, NULL, inputs[0].owners_before[j]);
+    for (uint8_t j = 0; j < inputs[i].num_owners; j++) {
+      p = json_str(p, NULL, inputs[i].owners_before[j]);
     }
     p = json_arrClose(p);
     p = json_objClose(p);
