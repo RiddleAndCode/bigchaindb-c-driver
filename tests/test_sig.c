@@ -90,7 +90,7 @@ void test_bigchain_build_json_inputs(void) {
 
 void test_bigchain_build_json_tx(void) {
   BIGCHAIN_TX tx;
-  char json[6000] = {0};
+  char json[600] = {0};
 
   prepare_tx(&tx);
   bigchain_build_json_tx(&tx, json);

@@ -15,7 +15,7 @@ node('builder'){
                     sh 'make'
                 }
                 stage('Testing') {
-                    sh 'make check'
+                    sh 'export LSAN_OPTIONS=verbosity=1:log_threads=1 && make check'
                     sh 'xsltproc /opt/ctest/ctest2junix.xsl tests/Testing/$(head -1 tests/Testing/TAG)/Test.xml > CTestResults.xml '
                     junit 'CTestResults.xml'
                     cobertura coberturaReportFile: 'coverage.xml'
