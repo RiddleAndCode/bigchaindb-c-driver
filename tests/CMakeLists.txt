@@ -4,7 +4,7 @@ add_subdirectory(Unity)
 
 add_custom_target(check
     COMMENT "Creating Coverage HTML and XML summary"
-    COMMAND ctest -T Test --no-compress-output || true 
+    COMMAND ctest -V -T Test --no-compress-output || true 
     COMMAND gcovr -k  --branches  -r  ${CMAKE_SOURCE_DIR}
               --xml-pretty -o ${CMAKE_BINARY_DIR}/coverage.xml
     COMMAND gcovr -k  --branches  -r  ${CMAKE_SOURCE_DIR}
