@@ -1,4 +1,4 @@
-## c-bigchaindb
+## c-bigchaindb-tx
 
 Transaction buider and signer.
 

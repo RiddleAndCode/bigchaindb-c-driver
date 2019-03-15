@@ -9,34 +9,31 @@
 #include "sha3.h"
 #include "ed25519-donna/ed25519.h"
 
-typedef struct
-{
-    char amount[8];
-    // FIXED CONDITION FOR EDCURVE
-    char details_public_key[45];
-    char public_keys[8][45];
-    uint8_t num_public_keys;
+typedef struct {
+  char amount[8];
+  // FIXED CONDITION FOR EDCURVE
+  char details_public_key[45];
+  char public_keys[8][45];
+  uint8_t num_public_keys;
 } BIGCHAIN_OUTPUT;
 
-typedef struct
-{
-    char fulfillment[256];
-    char fulfills[256];
-    char owners_before[8][256];
-    uint8_t num_owners;
+typedef struct {
+  char fulfillment[256];
+  char fulfills[256];
+  char owners_before[8][256];
+  uint8_t num_owners;
 } BIGCHAIN_INPUT;
 
-typedef struct
-{
-    char asset[256];
-    char metadata[256];
-    char operation[32];
-    BIGCHAIN_OUTPUT outputs[8];
-    uint8_t num_outputs;
-    BIGCHAIN_INPUT inputs[8];
-    uint8_t num_inputs;
-    char version[8];
-    char id[65];
+typedef struct {
+  char asset[256];
+  char metadata[256];
+  char operation[32];
+  BIGCHAIN_OUTPUT outputs[8];
+  uint8_t num_outputs;
+  BIGCHAIN_INPUT inputs[8];
+  uint8_t num_inputs;
+  char version[8];
+  char id[65];
 } BIGCHAIN_TX;
 
 void bigchain_sign_transaction(uint8_t *json_tx, uint16_t len, uint8_t *priv_key, uint8_t *pub_key, uint8_t *sig);
