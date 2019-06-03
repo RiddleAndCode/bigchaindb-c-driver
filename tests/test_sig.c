@@ -13,6 +13,7 @@
 #define TEST_PUBLIC_KEY_0 "6k17YAe4mJsqwPNgGj9tE1aMYLhpeqgJJivqaHeTTU5a"
 static const char* tx_json =
   "{\"asset\":{\"data\":{\"bicycle\":{\"manufacturer\":\"bkfab\",\"serial_number\":\"abcd1234\"}}},\"id\":null,\"inputs\":[{\"fulfillment\":null,\"fulfills\":null,\"owners_before\":[\"6k17YAe4mJsqwPNgGj9tE1aMYLhpeqgJJivqaHeTTU5a\"]}],\"metadata\":{\"planet\":\"earth\"},\"operation\":\"CREATE\",\"outputs\":[{\"amount\":\"1\",\"condition\":{\"details\":{\"public_key\":\"6k17YAe4mJsqwPNgGj9tE1aMYLhpeqgJJivqaHeTTU5a\",\"type\":\"ed25519-sha-256\"},\"uri\":\"ni:///sha-256;Vta3W592Kt_Y2ljfHEDZLd4OCZPHLiHyCgjNNKrrNwo?fpt=ed25519-sha-256&cost=131072\"},\"public_keys\":[\"6k17YAe4mJsqwPNgGj9tE1aMYLhpeqgJJivqaHeTTU5a\"]}],\"version\":\"2.0\"}";
+  
 char privkey[] = {'\x24','\x70','\x31','\x98','\x89','\xfe','\xd2','\x13','\x9a','\x6d','\xd9','\x9e','\xa3','\xae','\xf2','\xd3','\x96','\xe9','\xe7','\x47','\x51','\x32','\x33','\x7b','\xdb','\x04','\xd4','\x7c','\xa7','\xd2','\x02','\x8c'};
 char pubkey[]  = {'\x55','\x4e','\x89','\x70','\x1b','\x6d','\xca','\x9b','\x28','\x61','\x1f','\xb3','\x61','\x41','\x71','\x3a','\x2e','\x18','\x52','\x02','\x0e','\x8e','\xa8','\xa0','\x2e','\x27','\xda','\x40','\xef','\xac','\xcc','\x25'};
 
@@ -90,14 +91,30 @@ void test_bigchain_build_json_inputs(void) {
 
 void test_bigchain_build_json_tx(void) {
   BIGCHAIN_TX tx;
-  char json[600] = {0};
+  char json[6000] = {0};
 
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
   prepare_tx(&tx);
   bigchain_build_json_tx(&tx, json);
+ 
+  TEST_ASSERT_EQUAL(0, memcmp(tx_json, json, 572));
 
-  TEST_ASSERT_EQUAL(0, memcmp(tx_json, json, strlen(tx_json)));
+  char sig[128] = {0};
+  bigchain_sign_transaction((uint8_t*)json, strlen(json), (uint8_t*)privkey, (uint8_t*)pubkey,  (uint8_t*)sig);
+  bigchain_fulfill_and_serialize(&tx, json, 6000, sig);
+
+  // Base64
+  char fullfil[] = "pGSAIFVOiXAbbcqbKGEfs2FBcTouGFICDo6ooC4n2kDvrMwlgUCNMaKJ6aV03acNBqcYCffEWAcNQdhxS1o7beb6Ispxft0Ymgv2-oUlOFAeT6KeP65wLs_SOSKrLRaAIA_U75kC";
+  
+  TEST_ASSERT_EQUAL(0, memcmp(tx.inputs->fulfillment, fullfil, 137));
+
+  // memcpy(tx.inputs->fulfillment, fullfil, 137);  memset(json,0,6000);
+  // //id 
+  // bigchain_build_json_tx(&tx, json);
+
+
+
 }
-
 
 
 int main(void) {

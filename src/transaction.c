@@ -1,5 +1,28 @@
 #include "transaction.h"
 
+
+void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig)
+{
+  char fulfillment[256] = {0};
+
+  bintob64(fulfillment, sig, 64);
+  memcpy(tx->inputs[0].fulfillment, fulfillment, strlen(fulfillment));
+
+  memset(json_tx, 0, maxlen);
+  bigchain_build_json_tx(tx, json_tx);
+
+  // sha3_256((const unsigned char*)json_tx, MIN(maxlen, strlen(json_tx)), tx->id);
+  sha3_256((const unsigned char*)json_tx, strlen(json_tx), tx->id);
+
+  // 1. derencode sig
+  // 2. base64 encode
+  // 3. remove == from b64 str
+
+  memset(json_tx, 0, maxlen);
+  bigchain_build_json_tx(tx, json_tx);
+
+}
+
 /*
  * Takes a json string, hashes it sha3_256 and signs it with ed25519.
  */
@@ -98,6 +121,6 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
   // VERSION
   p = json_str(p, "version", tx->version);
   p = json_objClose(p);
-
+  p = json_end(p);
 }
 

@@ -1,3 +1,6 @@
 [submodule "libs/trezor-crypto"]
 	path = libs/trezor-crypto
 	url = git@github.com:trezor/trezor-crypto.git
+[submodule "libs/base64"]
+	path = libs/base64
+	url = https://github.com/rafagafe/base64
