@@ -51,9 +51,15 @@ void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t 
 
   memset(json_tx, 0, maxlen);
   bigchain_build_json_tx(tx, json_tx);
-
-  sha3_256((const unsigned char*)json_tx, MIN(maxlen, strlen(json_tx)), tx->id);
   
+  uint8_t tx_id[32] = {0};
+  sha3_256((const unsigned char*)json_tx, MIN(maxlen, strlen(json_tx)), tx_id);
+  
+  for(uint8_t i =0; i<32; i++)
+  {
+    sprintf(tx->id + i*2, "%02x", tx_id[i]);
+  }
+
   memset(json_tx, 0, maxlen);
   bigchain_build_json_tx(tx, json_tx);
 }
