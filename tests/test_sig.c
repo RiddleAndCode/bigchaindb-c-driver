@@ -101,18 +101,14 @@ void test_bigchain_build_json_tx(void) {
 
   char sig[128] = {0};
   bigchain_sign_transaction((uint8_t*)json, strlen(json), (uint8_t*)privkey, (uint8_t*)pubkey,  (uint8_t*)sig);
-  bigchain_fulfill_and_serialize(&tx, json, 6000, sig);
+  bigchain_fulfill_and_serialize(&tx, (uint8_t*)json, 6000, (uint8_t*)sig, (uint8_t*)pubkey);
 
   // Base64
   char fullfil[] = "pGSAIFVOiXAbbcqbKGEfs2FBcTouGFICDo6ooC4n2kDvrMwlgUCNMaKJ6aV03acNBqcYCffEWAcNQdhxS1o7beb6Ispxft0Ymgv2-oUlOFAeT6KeP65wLs_SOSKrLRaAIA_U75kC";
+  uint8_t transaction_id[] = {0xeb,0x39,0x0d,0x15,0x7b,0xc9,0x8d,0xba,0x07,0x26,0x46,0x31,0x11,0xc7,0x31,0x9a,0x28,0x13,0x2d,0x62,0x3b,0x29,0x7b,0x97,0xa9,0x1c,0x96,0x1d,0x1a,0xe1,0xe9,0x07};
   
   TEST_ASSERT_EQUAL(0, memcmp(tx.inputs->fulfillment, fullfil, 137));
-
-  // memcpy(tx.inputs->fulfillment, fullfil, 137);  memset(json,0,6000);
-  // //id 
-  // bigchain_build_json_tx(&tx, json);
-
-
+  TEST_ASSERT_EQUAL(0, memcmp(tx.id, transaction_id, 32));
 
 }
 

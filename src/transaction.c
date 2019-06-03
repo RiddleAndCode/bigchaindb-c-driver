@@ -1,26 +1,61 @@
 #include "transaction.h"
 
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
 
-void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig)
+void der_encode_fulfill(uint8_t *pubkey, uint8_t *sig, uint8_t *fulfill)
+{
+  uint16_t offset = 4;
+
+  fulfill[0] = 0xA4;
+  fulfill[1] = 0x64;
+  fulfill[2] = 0x80;
+  fulfill[3] = 0x20;
+
+  memcpy( fulfill + offset, pubkey, 32);
+  offset += 32;
+
+  fulfill[offset++] = 0x81;
+  fulfill[offset++] = 0x40;
+  memcpy( fulfill + offset, sig, 64);
+}
+
+void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig, uint8_t *pubkey)
 {
   char fulfillment[256] = {0};
+  uint8_t der[256] = {0};
 
-  bintob64(fulfillment, sig, 64);
+  der_encode_fulfill(pubkey, sig, der);
+  
+  bintob64(fulfillment, der, 4 + 32 + 2 + 64);
+
+  uint16_t size = strlen(fulfillment);
+  for(uint16_t i=0; i < size; i++)
+  {
+    if(fulfillment[i] == '+')
+      fulfillment[i] = '-';
+    else if(fulfillment[i] == '/')
+      fulfillment[i] = '_';
+  }
+
+  for(uint16_t i = size; i > 1; i--)
+  {
+    if(fulfillment[i] == '=')
+      fulfillment[i] = '\0';
+    else
+      break;
+  }
+  
   memcpy(tx->inputs[0].fulfillment, fulfillment, strlen(fulfillment));
 
   memset(json_tx, 0, maxlen);
   bigchain_build_json_tx(tx, json_tx);
 
-  // sha3_256((const unsigned char*)json_tx, MIN(maxlen, strlen(json_tx)), tx->id);
-  sha3_256((const unsigned char*)json_tx, strlen(json_tx), tx->id);
-
-  // 1. derencode sig
-  // 2. base64 encode
-  // 3. remove == from b64 str
-
+  sha3_256((const unsigned char*)json_tx, MIN(maxlen, strlen(json_tx)), tx->id);
+  
   memset(json_tx, 0, maxlen);
   bigchain_build_json_tx(tx, json_tx);
-
 }
 
 /*
