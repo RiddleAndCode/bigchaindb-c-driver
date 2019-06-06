@@ -1,5 +1,3 @@
-/* Copyright 2014, Kenneth MacKay. Licensed under the BSD 2-clause license. */
-
 #include "tests.h"
 
 #define TEST_ASSET	"\"data\":{\"bicycle\":{\"manufacturer\":\"bkfab\",\"serial_number\":\"abcd1234\"}}"
