@@ -111,31 +111,12 @@ void test_bigchain_build_json_tx(void) {
   TEST_ASSERT_EQUAL(0, memcmp(tx.id, transaction_id, 64));
 
 }
-void test_bigchain_build_json_tx2(void) {
-  BIGCHAIN_TX tx;
-  
-  char json[800] = {0};
-  memcpy(json, tx_json, strlen(tx_json));
-  
-  memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx);
-  // bigchain_build_json_tx(&tx, json);
-
-  char sig[128] = {0}; 
-  bigchain_sign_transaction((uint8_t*)json, strlen(json), (uint8_t*)privkey, (uint8_t*)pubkey,  (uint8_t*)sig);
-  bigchain_fulfill_and_serialize(&tx, (uint8_t*)json, 800, (uint8_t*)sig, (uint8_t*)pubkey);
-   uint8_t transaction_id[] = {0xeb,0x39,0x0d,0x15,0x7b,0xc9,0x8d,0xba,0x07,0x26,0x46,0x31,0x11,0xc7,0x31,0x9a,0x28,0x13,0x2d,0x62,0x3b,0x29,0x7b,0x97,0xa9,0x1c,0x96,0x1d,0x1a,0xe1,0xe9,0x07};
-  
-  // TEST_ASSERT_EQUAL(0, memcmp(tx.inputs->fulfillment, fullfil, 137));
-  TEST_ASSERT_EQUAL(0, memcmp(tx.id, transaction_id, 32));
-}
 
 int main(void) {
   UNITY_BEGIN();
-  // RUN_TEST(test_sig);
-  // RUN_TEST(test_bigchain_build_json_inputs);
-  // RUN_TEST(test_bigchain_build_json_outputs);
+  RUN_TEST(test_sig);
+  RUN_TEST(test_bigchain_build_json_inputs);
+  RUN_TEST(test_bigchain_build_json_outputs);
   RUN_TEST(test_bigchain_build_json_tx);
-  // RUN_TEST(test_bigchain_build_json_tx2);
   return UNITY_END();
 }
