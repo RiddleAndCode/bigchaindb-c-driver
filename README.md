@@ -39,7 +39,8 @@ License
 Credits
 -------
 
-This package was initially created using Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template. Many BigchainDB developers have contributed since then.
+This package was initially created using Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template. 
+Many BigchainDB developers have contributed since then.
 
 .. _Documentation: https://docs.bigchaindb.com/projects/py-driver/
 .. _pypi history: https://pypi.org/project/bigchaindb-driver/#history
