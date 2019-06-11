@@ -36,21 +36,3 @@ License
 --------
 * `licenses`_ - open source & open content
 
-Credits
--------
-
-This package was initially created using Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template. 
-Many BigchainDB developers have contributed since then.
-
-.. _Documentation: https://docs.bigchaindb.com/projects/py-driver/
-.. _pypi history: https://pypi.org/project/bigchaindb-driver/#history
-.. _Quickstart: https://docs.bigchaindb.com/projects/py-driver/en/latest/quickstart.html
-.. _BigchainDB Server Quickstart: https://docs.bigchaindb.com/projects/server/en/latest/quickstart.html
-.. _The Hitchhiker's Guide to BigchainDB: https://www.bigchaindb.com/developers/guide/
-.. _HTTP API Reference: https://docs.bigchaindb.com/projects/server/en/latest/http-client-server-api.html
-.. _All BigchainDB Documentation: https://docs.bigchaindb.com/
-.. _Determine the BigchainDB Root URL: https://docs.bigchaindb.com/projects/py-driver/en/latest/connect.html
-.. _licenses: https://github.com/bigchaindb/bigchaindb-driver/blob/master/LICENSES.md
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
-Transaction buider and signer.
