@@ -24,21 +24,14 @@ BigchainDB Documentation
 
 Usage
 ----------
-Example: Create a divisible asset for Alice who issues 10 token to Bob so that he can use her Game Boy.
-Afterwards Bob spends 3 of these tokens.
-
-If you want to send a transaction you need to `Determine the BigchainDB Root URL`_.
+test_bigchain_build_json_tx();
 
 
 Compatibility Matrix
 --------------------
-
-+-----------------------+---------------------------+
-| **BigchainDB Server** | **BigchainDB Driver**     |
-+=======================+===========================+
-| ``>= 2.0.0b7``        | ``0.6.2``                 |
-+-----------------------+---------------------------+
-
+ **BigchainDB Server**
+ ``>= 2.0.0b7``
+ 
 License
 --------
 * `licenses`_ - open source & open content
