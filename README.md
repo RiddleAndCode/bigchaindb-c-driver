@@ -94,6 +94,6 @@ The RIDDLE&CODE team.
 
 ## Support
 
-Included code/APIs provided as is. If you find an issue with API, pleaes submit the issue. Help is always availabl at RIDDLE&CODE.
+Included code/APIs provided as is. If you find an issue with API, pleaes submit the issue. Help is always available at RIDDLE&CODE.
  
 
