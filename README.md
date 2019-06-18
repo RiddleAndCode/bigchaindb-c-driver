@@ -34,13 +34,13 @@ ctest
 
 ## Usage
 
-The creation and signing of transaction on BigchainDB is simple. Inputs are taken and transfered to outputs. 
+The creation and signing of transaction on BigchainDB is simple. Inputs are taken and transferred to outputs. 
 The inputs and outputs have to be prepared and defined. 
 
 
 The test code of this project contains all of this aspects and can be used to create simple transactions. The support for more complex transactions is yet to come.
 
-First the transaction is prepared (this is in most cases a very specific task), thereafter
+First the transaction is prepared (this is in most cases a very specific task, [tests/test_sig.c](https://github.com/RiddleAndCode/bigchaindb-c-driver/blob/master/tests/test_sig.c#L38)), thereafter
 built, signed, fulfilled and serialized. 
 
 Now, the transaction can be submitted to the BigchainDB nodes.
