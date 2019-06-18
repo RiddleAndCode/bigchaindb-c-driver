@@ -5,7 +5,7 @@ Copyright RiddleandCode
 
 # ANSI C driver for BigchainDB
 
-This ANSI C driver enables developers to create, sign and send BigchainDB transactions to BigchainDB servers and has been used within several MCU based projects within RIDDLE&CODE.
+This ANSI C driver enables developers to create, sign and send BigchainDB transactions to BigchainDB servers and has been used in several MCU based projects within RIDDLE&CODE.
 
 **Please note**: This driver is written in C but is due to the C/C++ relation compatible with C++ by default. 
 
@@ -20,7 +20,7 @@ $ git clone https://github.com/RiddleAndCode/bigchaindb-c-driver.git
 $ git submodule update --init --recursive
 ```
 
-Having that, the compilation process can be started by running the cmake and make build process. 
+Having done that, the compilation process can be started by running the cmake and make build process. 
 Please ensure that you have cmake and make installed on your system:
 
 ```
@@ -38,10 +38,10 @@ The creation and signing of transaction on BigchainDB is simple. Inputs are take
 The inputs and outputs have to be prepared and defined. 
 
 
-The test code of this project contains all of this aspects and can be used to create simple transactions. The support for more complex transactions is missing at this point in time.
+The test code of this project contains all of this aspects and can be used to create simple transactions. The support for more complex transactions is yet to come.
 
-First the transactin is prepared (this is in most cases a very specific task), thereafter
-build, signed, fulfilled and serialized. 
+First the transaction is prepared (this is in most cases a very specific task), thereafter
+built, signed, fulfilled and serialized. 
 
 Now, the transaction can be submitted to the BigchainDB nodes.
 
