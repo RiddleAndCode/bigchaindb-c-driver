@@ -61,7 +61,7 @@ Now, the transaction can be submitted to the BigchainDB nodes.
 
 
 ### Note
-When building the metadata and asset objects take the following measures:
+When building the metadata and asset objects take the following measures to make it work correctly:
 1. No spaces in the json structure: ```{"key 1": "value a"}``` becomes ```'{"key 1":"value a"}'```
 2. Keys should be alphabetically ordered: ```{"key 1":"value a","A key":"A value"}``` becomes ```{"A key":"A value","key 1":"value a"}```
 3. No numbers fields, only strings ```{"key 1":2.3123}``` becomes ```{"key 1":"2.3123"}```
@@ -80,7 +80,7 @@ When building the metadata and asset objects take the following measures:
 
 ## Compatibility Matrix
 
-The driver should be compatible with BigchainDB version 2.x but got only actively tested with BigchainDB v2.0.0b9. It might work with earlier versions but hasn't been tested with them.
+The driver should be compatible with BigchainDB version 2.x but got only actively tested with BigchainDB v2.0.0b9. It might work with earlier versions too but hasn't been tested with them.
 
 | BigchainDB Server | BigchainDB C driver |
 | ----------------- |------------------------------|
@@ -94,6 +94,8 @@ The RIDDLE&CODE team.
 
 ## Support
 
-Included code/APIs provided as is. If you find an issue with API, pleaes submit the issue. Help is always available at RIDDLE&CODE.
+Included code/APIs provided as is. 
+If you find an issue with API, please report the issue in https://gitter.im/bigchaindb/bigchaindb. 
+Help is always available at RIDDLE&CODE.
  
 
