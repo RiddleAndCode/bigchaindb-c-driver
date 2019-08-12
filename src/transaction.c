@@ -113,7 +113,9 @@ char* bigchain_build_json_inputs(BIGCHAIN_INPUT *inputs, uint8_t num_inputs, cha
     }
 
     if(inputs[i].fulfills[0] != '\0') {
-      p = json_str(p, "fulfills", inputs[i].fulfills);
+      p = json_objOpen(p, "fulfills" );
+      p = atoa(p, &(inputs[i].fulfills) );
+      p = json_objClose(p);
     } else {
       p = json_null(p, "fulfills");
     }
@@ -165,3 +167,51 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
   p = json_end(p);
 }
 
+/* 'operation'can be either 'C' or 'T' for CREATE and TRANSFER respectively.
+ * when 'operation' is CREATE then 'asset' can be arbitrary. (The keys on the JSON must be in alphabetical order)
+ * but when 'operation' is TRANSFER then 'asset' must be the transaction id of the asset which is to be tranfered.
+ */
+void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata , char *base_pubkey) {
+  // Fill input struct
+  memset(tx->inputs, 0, sizeof(BIGCHAIN_INPUT));
+  memcpy(tx->inputs[0].owners_before[0], base_pubkey, strlen(base_pubkey));
+  tx->inputs[0].num_owners = 1;
+  tx->num_inputs = 1;
+ 
+  if( operation == 'C'){
+    memcpy(tx->operation, "CREATE", strlen("CREATE"));
+    memcpy(tx->asset, asset, strlen(asset));
+  }else if( operation == 'T'){
+    memcpy(tx->operation, "TRANSFER", strlen("TRANSFER"));
+    memcpy(tx->inputs[0].fulfills ,"\"output_index\":0,\"transaction_id\":\"" , 35);
+    memcpy(tx->inputs[0].fulfills , asset , 64);
+    memcpy(tx->inputs[0].fulfills , "\"\0" , 2 );
+    memcpy( &(tx->asset) ,"\"id\":\"" , 6);
+    memcpy( &(tx->asset) + 6 , asset , 64);
+    memcpy( &(tx->asset) + 64 , "\"\0" , 2 );
+  }
+  
+  memcpy(tx->metadata, metadata, strlen(metadata));
+  memcpy(tx->version, BDB_VERSION, strlen(BDB_VERSION));
+  
+  // Fill output struct
+  memset(tx->outputs, 0, sizeof(BIGCHAIN_OUTPUT));
+  tx->outputs[0].amount[0] = '1';  
+  memcpy(tx->outputs[0].details_public_key, base_pubkey, strlen(base_pubkey));
+  memcpy(tx->outputs[0].public_keys[0], base_pubkey, strlen(base_pubkey));
+  tx->outputs[0].num_public_keys = 1;
+  tx->num_outputs = 1;
+}
+
+void fulfill_tx(BIGCHAIN_TX *tx, const char operation, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen){
+  uint8_t sig[140] = {0};
+  bigchain_build_json_tx(tx, json);
+  SWO_PrintString("\nTX prepared:\n");
+  SWO_PrintString(json);
+  if( operation == 'T'){  // For TRANSFER the json string must be concatenated with the input tx_id and the output_index
+    strcat(json , tx_id );
+    strcat(json , "0" );
+  }
+  bigchain_sign_transaction((uint8_t *)json, strlen(json), (uint8_t *)priv_key, (uint8_t *)pub_key, (uint8_t *)sig);
+  bigchain_fulfill_and_serialize(tx, (uint8_t *)json, maxlen, (uint8_t *)sig, (uint8_t *)pub_key);
+}
