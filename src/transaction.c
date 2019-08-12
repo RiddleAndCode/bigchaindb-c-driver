@@ -184,11 +184,11 @@ void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   }else if( operation == 'T'){
     memcpy(tx->operation, "TRANSFER", strlen("TRANSFER"));
     memcpy(tx->inputs[0].fulfills ,"\"output_index\":0,\"transaction_id\":\"" , 35);
-    memcpy(tx->inputs[0].fulfills , asset , 64);
-    memcpy(tx->inputs[0].fulfills , "\"\0" , 2 );
-    memcpy( &(tx->asset) ,"\"id\":\"" , 6);
-    memcpy( &(tx->asset) + 6 , asset , 64);
-    memcpy( &(tx->asset) + 64 , "\"\0" , 2 );
+    memcpy(tx->inputs[0].fulfills + 35 , asset , 64);
+    memcpy(tx->inputs[0].fulfills + 99, "\"\0" , 2 );
+    memcpy( tx->asset ,"\"id\":\"" , 6);
+    memcpy( tx->asset + 6 , asset , 64);
+    memcpy( tx->asset + 70 , "\"\0" , 2 );
   }
   
   memcpy(tx->metadata, metadata, strlen(metadata));
@@ -203,12 +203,12 @@ void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   tx->num_outputs = 1;
 }
 
-void fulfill_tx(BIGCHAIN_TX *tx, const char operation, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen){
+void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen){
   uint8_t sig[140] = {0};
   bigchain_build_json_tx(tx, json);
   SWO_PrintString("\nTX prepared:\n");
   SWO_PrintString(json);
-  if( operation == 'T'){  // For TRANSFER the json string must be concatenated with the input tx_id and the output_index
+  if( !memcmp(tx->operation , "TRANSFER", 8) ){  // For TRANSFER the json string must be concatenated with the input tx_id and the output_index
     strcat(json , tx_id );
     strcat(json , "0" );
   }

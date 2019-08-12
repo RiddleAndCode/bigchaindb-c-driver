@@ -43,6 +43,6 @@ char* bigchain_build_json_inputs(BIGCHAIN_INPUT *inputs, uint8_t num_inputs, cha
 char* bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs, char *json_obj);
 void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx);
 void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata , char *base_pubkey );
-void fulfill_tx(BIGCHAIN_TX *tx, const char operation, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen);
+void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen);
 
 #endif // _BIGCHAIN_TX_H_

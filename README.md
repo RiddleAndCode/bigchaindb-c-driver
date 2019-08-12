@@ -46,16 +46,18 @@ built, signed, fulfilled and serialized.
 Now, the transaction can be submitted to the BigchainDB nodes.
 
 ```
-  BIGCHAIN_TX tx;
-  char json[6000] = {0};
-
-  memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx);
-  bigchain_build_json_tx(&tx, json);
- 
-  char sig[128] = {0};
-  bigchain_sign_transaction((uint8_t*)json, strlen(json), (uint8_t*)privkey, (uint8_t*)pubkey,  (uint8_t*)sig);
-  bigchain_fulfill_and_serialize(&tx, (uint8_t*)json, 6000, (uint8_t*)sig, (uint8_t*)pubkey);
+  /* inputs: operation, asset, metadata, base_pubkey(public key in base58)
+  * output: tx
+  * 'operation' can be either 'C' or 'T' for CREATE and TRANSFER respectively.
+  * when 'operation' is CREATE then 'asset' can be arbitrary. (The keys on the JSON must be in alphabetical order)
+  * but when 'operation' is TRANSFER then 'asset' must be the transaction id of the asset which is to be tranfered.
+  */
+  prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata , char *base_pubkey);
+  
+  /* inputs: tx, tx_id(same as 'asset' above, only needed for TRANSFER) , priv_key, pub_key(public key in hexadecimal base) , maxlen(maximum length of string)
+  * output: json
+  */
+  fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen);
 
 ```
 
