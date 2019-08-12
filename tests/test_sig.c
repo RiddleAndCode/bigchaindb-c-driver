@@ -35,7 +35,7 @@ void prepare_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t *num_outputs) {
   *num_outputs = 1;
 }
 
-void prepare_tx(BIGCHAIN_TX *tx) {
+void prepare_test_tx(BIGCHAIN_TX *tx) {
   prepare_inputs(tx->inputs, &(tx->num_inputs));
   prepare_outputs(tx->outputs, &(tx->num_outputs));
 
@@ -92,7 +92,7 @@ void test_bigchain_build_json_tx(void) {
   char json[6000] = {0};
 
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx);
+  prepare_test_tx(&tx);
   bigchain_build_json_tx(&tx, json);
  
   TEST_ASSERT_EQUAL(0, memcmp(tx_json, json, 572));
