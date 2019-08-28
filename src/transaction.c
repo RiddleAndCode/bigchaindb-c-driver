@@ -4,7 +4,7 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-
+#define DEFAULT_URI "ni:///sha-256;WVm8YmcTjv05Osmho-Hc7o6N2Hg0YvgsKdaidCaRb0Q?fpt=ed25519-sha-256&cost=131072"
 #define FULFILL_PREFIX "\"output_index\":0,\"transaction_id\":\""
 #define FULFILL_PREFIX_LENGTH 35
 #define TX_ID_LENGTH 64
@@ -88,7 +88,7 @@ char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs,
     p = json_str(p, "type", "ed25519-sha-256");
     p = json_objClose(p);
 
-    p = json_str(p, "uri", "ni:///sha-256;Vta3W592Kt_Y2ljfHEDZLd4OCZPHLiHyCgjNNKrrNwo?fpt=ed25519-sha-256&cost=131072");
+    p = json_str(p, "uri", DEFAULT_URI);
     p = json_objClose(p);
 
     p = json_arrOpen(p, "public_keys");
@@ -208,8 +208,6 @@ void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
 void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen) {
   uint8_t sig[140] = {0};
   bigchain_build_json_tx(tx, json);
-//  SWO_PrintString("\nTX prepared:\n");
-  //SWO_PrintString(json);
   if (!memcmp(tx->operation, "TRANSFER", 8)) {
     // For TRANSFER the json string must be concatenated with the input tx_id and the output_index
     strcat(json, tx_id);
