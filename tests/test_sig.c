@@ -33,7 +33,7 @@ void prepare_inputs(char operation, BIGCHAIN_INPUT *inputs, uint8_t *num_inputs)
   memcpy(inputs[0].owners_before[0], TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
   if(operation == 'T') {
     strcpy(inputs[0].fulfills, "\"output_index\":0,\"transaction_id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"" );
-  }else if(operation != 'C'){
+  } else if(operation != 'C') {
     return;
   }
   inputs[0].num_owners = 1;
@@ -100,21 +100,21 @@ void test_bigchain_build_json_inputs(void) {
 }
 
 void test_bigchain_create_tx() {
-    BIGCHAIN_TX tx;
-    char json[3000] = {0};
-    memset(&tx, 0, sizeof(BIGCHAIN_TX));
-    prepare_tx(&tx, TEST_OPERATION_CREATE , TEST_CREATE_ASSET , TEST_METADATA , base58_pubkey );
-    fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 );
-    TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
+  BIGCHAIN_TX tx;
+  char json[3000] = {0};
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
+  prepare_tx(&tx, TEST_OPERATION_CREATE , TEST_CREATE_ASSET , TEST_METADATA , base58_pubkey );
+  fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 );
+  TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
 
 void test_bigchain_transfer_tx() {
-    BIGCHAIN_TX tx;
-    char json[2000] = {0};
-    memset(&tx, 0, sizeof(BIGCHAIN_TX));
-    prepare_tx(&tx, TEST_OPERATION_TRANSFER , TEST_TRANSFER_ASSET , TEST_METADATA , base58_pubkey ) ;
-    fulfill_tx(&tx, TEST_TRANSFER_ASSET, privkey, pubkey, json, 2000 );
-    TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
+  BIGCHAIN_TX tx;
+  char json[2000] = {0};
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
+  prepare_tx(&tx, TEST_OPERATION_TRANSFER , TEST_TRANSFER_ASSET , TEST_METADATA , base58_pubkey ) ;
+  fulfill_tx(&tx, TEST_TRANSFER_ASSET, privkey, pubkey, json, 2000 );
+  TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
 
 

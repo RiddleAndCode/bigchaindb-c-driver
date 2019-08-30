@@ -75,6 +75,14 @@ void bigchain_sign_transaction(uint8_t *json_tx, uint16_t len, uint8_t *priv_key
   ed25519_sign(hash, 32, priv_key, pub_key, sig);
 }
 
+char *bigchain_build_condition_uri(char *public_key_base58, char *uri) {
+  uint8_t der[256] = {0};
+
+  der_encode_fulfill(pubkey, sig, der);
+
+  bintob64(fulfillment, der, 4 + 32 + 2 + 64);
+}
+
 char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs, char *json_obj) {
   char *p = json_obj;
   p = json_arrOpen(p, "outputs");
@@ -89,6 +97,7 @@ char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs,
     p = json_objClose(p);
 
     p = json_str(p, "uri", DEFAULT_URI);
+    // p = json_str(p, "uri", bigchain_build_condition_uri(uri_str , outputs[i].details_public_key);
     p = json_objClose(p);
 
     p = json_arrOpen(p, "public_keys");
