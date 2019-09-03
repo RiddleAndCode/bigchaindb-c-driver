@@ -75,17 +75,47 @@ void bigchain_sign_transaction(uint8_t *json_tx, uint16_t len, uint8_t *priv_key
   ed25519_sign(hash, 32, priv_key, pub_key, sig);
 }
 
-// char *bigchain_build_condition_uri(char *public_key_base58, char *uri) {
-//   uint8_t der[256] = {0};
+char *bigchain_build_condition_uri(char *public_key_base58, char *uri) {
+  uint8_t der[38] = {0};
+  uint8_t hash[32] = {0};
+  char fingerp_base64[50] = {0};
+  uint8_t pubkey[32] = {0};
+  size_t binsz = 32 ;
+  strcpy( uri , "ni:///sha-256;" );
 
-//   der_encode_fulfill(pubkey, sig, der);
+  b58tobin(pubkey, &binsz , public_key_base58);
+  
+  der[0] = 0x30;
+  der[1] = 0x22;
+  der[2] = 0x80; 
+  der[3] = 0x20; //content-length = 32
+  memcpy( der + 4 , pubkey , 32);
+  sha256_Raw( der , 36 , hash );
+  bintob64(fingerp_base64, hash , 32 );
+  uint8_t size = strlen(fingerp_base64);
+  for (uint16_t i = 0; i < size; i++) {
+    if (fingerp_base64[i] == '+')
+      fingerp_base64[i] = '-';
+    else if (fingerp_base64[i] == '/')
+      fingerp_base64[i] = '_';
+  }
 
-//   bintob64(fulfillment, der, 4 + 32 + 2 + 64);
-// }
+  for (uint16_t i = size; i > 1; i--) {
+    if (fingerp_base64[i] == '=')
+      fingerp_base64[i] = '\0';
+    else
+      break;
+  }
+  memcpy( uri + 14 , fingerp_base64 , 43 );
+  strcat( uri , "?fpt=ed25519-sha-256&cost=131072" );
+  return uri;
+}
 
 char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs, char *json_obj) {
   char *p = json_obj;
   p = json_arrOpen(p, "outputs");
+  char uri_str[90] = {0};
+
   for (uint8_t i = 0; i < num_outputs; i++) {
     p = json_objOpen(p, NULL);
     p = json_str(p, "amount", outputs[i].amount);
@@ -96,8 +126,8 @@ char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs,
     p = json_str(p, "type", "ed25519-sha-256");
     p = json_objClose(p);
 
-    p = json_str(p, "uri", DEFAULT_URI);
-    // p = json_str(p, "uri", bigchain_build_condition_uri(uri_str , outputs[i].details_public_key);
+    //p = json_str(p, "uri", DEFAULT_URI);
+    p = json_str(p, "uri", bigchain_build_condition_uri( outputs[i].details_public_key , uri_str ) );
     p = json_objClose(p);
 
     p = json_arrOpen(p, "public_keys");

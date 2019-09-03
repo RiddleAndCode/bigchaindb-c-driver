@@ -117,13 +117,23 @@ void test_bigchain_transfer_tx() {
   TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
 
+void test_b58tobin() {
+  size_t binsz = 32 ;
+  uint8_t pubkey_test[32] = {0};
+  b58tobin( pubkey_test , &binsz , base58_pubkey);
+  memcmp( pubkey , pubkey_test , 32 );
+  //TEST_ASSERT_EQUAL( 0, memcmp( pubkey , pubkey_test , 32 ) );
+  TEST_ASSERT_EQUAL_INT8_ARRAY( pubkey , pubkey_test , 32 );
+}
 
 int main(void) {
+  test_b58tobin();
   UNITY_BEGIN();
   RUN_TEST(test_sig);
   RUN_TEST(test_bigchain_build_json_inputs);
   RUN_TEST(test_bigchain_build_json_outputs);
   RUN_TEST(test_bigchain_create_tx);
   RUN_TEST(test_bigchain_transfer_tx);
+  RUN_TEST(test_b58tobin);
   return UNITY_END();
 }
