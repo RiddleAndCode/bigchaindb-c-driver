@@ -103,7 +103,7 @@ void test_bigchain_create_tx() {
   BIGCHAIN_TX tx;
   char json[3000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx, TEST_OPERATION_CREATE , TEST_CREATE_ASSET , TEST_METADATA , base58_pubkey );
+  prepare_tx(&tx, TEST_OPERATION_CREATE, TEST_CREATE_ASSET, TEST_METADATA, base58_pubkey );
   fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 );
   TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
@@ -112,7 +112,7 @@ void test_bigchain_transfer_tx() {
   BIGCHAIN_TX tx;
   char json[2000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx, TEST_OPERATION_TRANSFER , TEST_TRANSFER_ASSET , TEST_METADATA , base58_pubkey ) ;
+  prepare_tx(&tx, TEST_OPERATION_TRANSFER, TEST_TRANSFER_ASSET, TEST_METADATA, base58_pubkey ) ;
   fulfill_tx(&tx, TEST_TRANSFER_ASSET, privkey, pubkey, json, 2000 );
   TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
@@ -120,10 +120,10 @@ void test_bigchain_transfer_tx() {
 void test_b58tobin() {
   size_t binsz = 32 ;
   uint8_t pubkey_test[32] = {0};
-  b58tobin( pubkey_test , &binsz , base58_pubkey);
-  memcmp( pubkey , pubkey_test , 32 );
+  b58tobin( pubkey_test, &binsz, base58_pubkey);
+  memcmp( pubkey, pubkey_test, 32 );
   //TEST_ASSERT_EQUAL( 0, memcmp( pubkey , pubkey_test , 32 ) );
-  TEST_ASSERT_EQUAL_INT8_ARRAY( pubkey , pubkey_test , 32 );
+  TEST_ASSERT_EQUAL_INT8_ARRAY( pubkey, pubkey_test, 32 );
 }
 
 int main(void) {

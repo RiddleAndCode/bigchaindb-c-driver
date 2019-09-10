@@ -81,17 +81,17 @@ char *bigchain_build_condition_uri(char *public_key_base58, char *uri) {
   char fingerp_base64[50] = {0};
   uint8_t pubkey[32] = {0};
   size_t binsz = 32 ;
-  strcpy( uri , "ni:///sha-256;" );
+  strcpy( uri, "ni:///sha-256;" );
 
-  b58tobin(pubkey, &binsz , public_key_base58);
-  
+  b58tobin(pubkey, &binsz, public_key_base58);
+
   der[0] = 0x30;
   der[1] = 0x22;
-  der[2] = 0x80; 
+  der[2] = 0x80;
   der[3] = 0x20; //content-length = 32
-  memcpy( der + 4 , pubkey , 32);
-  sha256_Raw( der , 36 , hash );
-  bintob64(fingerp_base64, hash , 32 );
+  memcpy( der + 4, pubkey, 32);
+  sha256_Raw( der, 36, hash );
+  bintob64(fingerp_base64, hash, 32 );
   uint8_t size = strlen(fingerp_base64);
   for (uint16_t i = 0; i < size; i++) {
     if (fingerp_base64[i] == '+')
@@ -106,8 +106,8 @@ char *bigchain_build_condition_uri(char *public_key_base58, char *uri) {
     else
       break;
   }
-  memcpy( uri + 14 , fingerp_base64 , 43 );
-  strcat( uri , "?fpt=ed25519-sha-256&cost=131072" );
+  memcpy( uri + 14, fingerp_base64, 43 );
+  strcat( uri, "?fpt=ed25519-sha-256&cost=131072" );
   return uri;
 }
 
@@ -127,7 +127,7 @@ char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs,
     p = json_objClose(p);
 
     //p = json_str(p, "uri", DEFAULT_URI);
-    p = json_str(p, "uri", bigchain_build_condition_uri( outputs[i].details_public_key , uri_str ) );
+    p = json_str(p, "uri", bigchain_build_condition_uri( outputs[i].details_public_key, uri_str ) );
     p = json_objClose(p);
 
     p = json_arrOpen(p, "public_keys");
@@ -224,12 +224,12 @@ void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
     memcpy(tx->asset, asset, strlen(asset));
   } else if (operation == 'T') {
     memcpy(tx->operation, "TRANSFER", strlen("TRANSFER"));
-    memcpy(tx->inputs[0].fulfills, FULFILL_PREFIX , FULFILL_PREFIX_LENGTH );
-    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH , asset , TX_ID_LENGTH );
-    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH + TX_ID_LENGTH , "\"\0", 2);
-    memcpy(tx->asset, ASSET_ID , ASSET_ID_LENGTH);
+    memcpy(tx->inputs[0].fulfills, FULFILL_PREFIX, FULFILL_PREFIX_LENGTH );
+    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH, asset, TX_ID_LENGTH );
+    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH + TX_ID_LENGTH, "\"\0", 2);
+    memcpy(tx->asset, ASSET_ID, ASSET_ID_LENGTH);
     memcpy(tx->asset + ASSET_ID_LENGTH, asset, TX_ID_LENGTH );
-    memcpy(tx->asset + ASSET_ID_LENGTH + TX_ID_LENGTH , "\"\0", 2);
+    memcpy(tx->asset + ASSET_ID_LENGTH + TX_ID_LENGTH, "\"\0", 2);
   }
 
   memcpy(tx->metadata, metadata, strlen(metadata));
