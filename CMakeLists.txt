@@ -12,7 +12,7 @@ if(NOT CMAKE_C_CPPCHECK)
     message(FATAL_ERROR "cppcheck not found.")
 else()
     message(STATUS "cppcheck found: ${CMAKE_C_CPPCHECK}")
-    set(CMAKE_C_CPPCHECK "${CMAKE_C_CPPCHECK}" --enable=warning,performance,portability,style --error-exitcode=1 --force --quiet)
+    #set(CMAKE_C_CPPCHECK "${CMAKE_C_CPPCHECK}" --enable=warning,performance,portability,style --error-exitcode=1 --force --quiet)
 endif()
 
 add_compile_options(-DuECC_VLI_NATIVE_LITTLE_ENDIAN=0 -std=c99 -Wall -Wextra  -O0 -g --coverage -fsanitize=address -fno-omit-frame-pointer)
