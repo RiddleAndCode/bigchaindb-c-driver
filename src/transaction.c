@@ -1,5 +1,5 @@
 #include "transaction.h"
-
+#include <string.h>
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
