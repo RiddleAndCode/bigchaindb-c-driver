@@ -5,6 +5,7 @@ file(GLOB TREZOR_CRYPTO_ED255 "../libs/trezor-crypto/ed25519-donna/*.c")
 file(GLOB TREZOR_CRYPTO "../libs/trezor-crypto/*.c")
 file(GLOB BASE64 "../libs/base64/base64.c")
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/libs)
 
 add_library(cbig STATIC
     ${SOURCES}
