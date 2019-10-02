@@ -17,6 +17,6 @@ endif()
 
 add_compile_options(-DuECC_VLI_NATIVE_LITTLE_ENDIAN=0 -std=c99 -Wall -Wextra  -O0 -g --coverage -fsanitize=address -fno-omit-frame-pointer)
 SET(CMAKE_EXE_LINKER_FLAGS "-DuECC_VLI_NATIVE_LITTLE_ENDIAN=0 -std=c99 -Wall -Wextra  -O0 -g --coverage -fsanitize=address -fno-omit-frame-pointer ${CMAKE_EXE_LINKER_FLAGS}")
-add_subdirectory(src)    
+add_subdirectory(src)
 include(CTest)
 add_subdirectory(tests)
