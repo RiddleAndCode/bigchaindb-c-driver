@@ -42,8 +42,8 @@ void bigchain_sign_transaction(uint8_t *json_tx, uint16_t len, uint8_t *priv_key
 char *bigchain_build_json_inputs(BIGCHAIN_INPUT *inputs, uint8_t num_inputs, char *json_obj);
 char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs, char *json_obj);
 void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx);
-void prepare_CREATE(BIGCHAIN_TX *tx, ,char *asset, char *metadata, char *base_pubkey);
-void prepare_TRANSFER(BIGCHAIN_TX *tx, char *fullfils, char *asset, char *metadata, char *base_pubkey);
+void prepare_CREATE(BIGCHAIN_TX *tx, char *asset, char *metadata, char *base_pubkey);
+void prepare_TRANSFER(BIGCHAIN_TX *tx, char *fulfills, char *asset, char *metadata, char *base_pubkey);
 void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen);
 
 #endif // _BIGCHAIN_TX_H_

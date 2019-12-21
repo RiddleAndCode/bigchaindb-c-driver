@@ -244,7 +244,7 @@ void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   tx->num_outputs = 1;
 }
 
-void prepare_CREATE(BIGCHAIN_TX *tx, ,char *asset, char *metadata, char *base_pubkey)
+void prepare_CREATE(BIGCHAIN_TX *tx, char *asset, char *metadata, char *base_pubkey)
 {
   // Fill input struct
   memset(tx->inputs, 0, sizeof(BIGCHAIN_INPUT));

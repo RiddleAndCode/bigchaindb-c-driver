@@ -51,7 +51,7 @@ Now, the transaction can be submitted to the BigchainDB nodes.
   * inputs: operation, asset, metadata, base_pubkey(public key in base58)
   * output: tx
   */
-  void prepare_CREATE(BIGCHAIN_TX *tx, ,char *asset, char *metadata, char *base_pubkey);
+  void prepare_CREATE(BIGCHAIN_TX *tx, char *asset, char *metadata, char *base_pubkey);
 
   /* prepare for 'TRANSFER' operation
   * (The keys on the JSON must be in alphabetical order)
