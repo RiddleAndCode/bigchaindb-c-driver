@@ -46,13 +46,21 @@ built, signed, fulfilled and serialized.
 Now, the transaction can be submitted to the BigchainDB nodes.
 
 ```
-  /* inputs: operation, asset, metadata, base_pubkey(public key in base58)
+  /* prepare for 'CREATE' operation
+  * (The keys on the JSON must be in alphabetical order)
+  * inputs: operation, asset, metadata, base_pubkey(public key in base58)
   * output: tx
-  * 'operation' can be either 'C' or 'T' for CREATE and TRANSFER respectively.
-  * when 'operation' is CREATE then 'asset' can be arbitrary. (The keys on the JSON must be in alphabetical order)
-  * but when 'operation' is TRANSFER then 'asset' must be the transaction id of the asset which is to be tranfered.
   */
-  prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata , char *base_pubkey);
+  void prepare_CREATE(BIGCHAIN_TX *tx, ,char *asset, char *metadata, char *base_pubkey);
+
+  /* prepare for 'TRANSFER' operation
+  * (The keys on the JSON must be in alphabetical order)
+  * asset = transaction id of the asset to be transferred
+  * fulfills = transaction id of the latest TRANSFER, which is the same as asset if this is the first time it is being transferred.
+  * inputs: operation, fulfills, asset, metadata, base_pubkey(public key in base58)
+  * output: tx
+  */
+  void prepare_TRANSFER(BIGCHAIN_TX *tx, char *fulfills, char *asset, char *metadata, char *base_pubkey);
   
   /* inputs: tx, tx_id(same as 'asset' above, only needed for TRANSFER) , priv_key, pub_key(public key in hexadecimal base) , maxlen(maximum length of string)
   * output: json
