@@ -208,30 +208,45 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
   p = json_end(p);
 }
 
-/* 'operation'can be either 'C' or 'T' for CREATE and TRANSFER respectively.
- * when 'operation' is CREATE then 'asset' can be arbitrary. (The keys on the JSON must be in alphabetical order)
- * but when 'operation' is TRANSFER then 'asset' must be the transaction id of the asset which is to be tranfered.
- */
-void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata, char *base_pubkey) {
+void prepare_CREATE(BIGCHAIN_TX *tx, char *asset, char *metadata, char *base_pubkey)
+{
   // Fill input struct
   memset(tx->inputs, 0, sizeof(BIGCHAIN_INPUT));
   memcpy(tx->inputs[0].owners_before[0], base_pubkey, strlen(base_pubkey));
   tx->inputs[0].num_owners = 1;
   tx->num_inputs = 1;
 
-  if (operation == 'C') {
-    memcpy(tx->operation, "CREATE", strlen("CREATE"));
-    memcpy(tx->asset, asset, strlen(asset));
-  } else if (operation == 'T') {
-    memcpy(tx->operation, "TRANSFER", strlen("TRANSFER"));
-    memcpy(tx->inputs[0].fulfills, FULFILL_PREFIX, FULFILL_PREFIX_LENGTH );
-    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH, asset, TX_ID_LENGTH );
-    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH + TX_ID_LENGTH, "\"\0", 2);
-    memcpy(tx->asset, ASSET_ID, ASSET_ID_LENGTH);
-    memcpy(tx->asset + ASSET_ID_LENGTH, asset, TX_ID_LENGTH );
-    memcpy(tx->asset + ASSET_ID_LENGTH + TX_ID_LENGTH, "\"\0", 2);
-  }
+  memcpy(tx->operation, "CREATE", strlen("CREATE"));
+  memcpy(tx->asset, asset, strlen(asset));
+  
+  memcpy(tx->metadata, metadata, strlen(metadata));
+  memcpy(tx->version, BDB_VERSION, strlen(BDB_VERSION));
 
+  // Fill output struct
+  memset(tx->outputs, 0, sizeof(BIGCHAIN_OUTPUT));
+  tx->outputs[0].amount[0] = '1';
+  memcpy(tx->outputs[0].details_public_key, base_pubkey, strlen(base_pubkey));
+  memcpy(tx->outputs[0].public_keys[0], base_pubkey, strlen(base_pubkey));
+  tx->outputs[0].num_public_keys = 1;
+  tx->num_outputs = 1;
+}
+
+void prepare_TRANSFER(BIGCHAIN_TX *tx, char *fulfills, char *asset, char *metadata, char *base_pubkey)
+{
+  // Fill input struct
+  memset(tx->inputs, 0, sizeof(BIGCHAIN_INPUT));
+  memcpy(tx->inputs[0].owners_before[0], base_pubkey, strlen(base_pubkey));
+  tx->inputs[0].num_owners = 1;
+  tx->num_inputs = 1;
+
+  memcpy(tx->operation, "TRANSFER", strlen("TRANSFER"));
+  memcpy(tx->inputs[0].fulfills, FULFILL_PREFIX, FULFILL_PREFIX_LENGTH );
+  memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH, fulfills, TX_ID_LENGTH );
+  memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH + TX_ID_LENGTH, "\"\0", 2);
+  memcpy(tx->asset, ASSET_ID, ASSET_ID_LENGTH);
+  memcpy(tx->asset + ASSET_ID_LENGTH, asset, TX_ID_LENGTH );
+  memcpy(tx->asset + ASSET_ID_LENGTH + TX_ID_LENGTH, "\"\0", 2);
+  
   memcpy(tx->metadata, metadata, strlen(metadata));
   memcpy(tx->version, BDB_VERSION, strlen(BDB_VERSION));
 

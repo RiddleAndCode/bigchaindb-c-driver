@@ -103,7 +103,7 @@ void test_bigchain_create_tx() {
   BIGCHAIN_TX tx;
   char json[3000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx, TEST_OPERATION_CREATE, TEST_CREATE_ASSET, TEST_METADATA, base58_pubkey );
+  prepare_CREATE(&tx, TEST_CREATE_ASSET, TEST_METADATA, base58_pubkey );
   fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 );
   TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
@@ -112,7 +112,7 @@ void test_bigchain_transfer_tx() {
   BIGCHAIN_TX tx;
   char json[2000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx, TEST_OPERATION_TRANSFER, TEST_TRANSFER_ASSET, TEST_METADATA, base58_pubkey ) ;
+  prepare_TRANSFER(&tx, TEST_TRANSFER_ASSET, TEST_TRANSFER_ASSET, TEST_METADATA, base58_pubkey ) ;
   fulfill_tx(&tx, TEST_TRANSFER_ASSET, privkey, pubkey, json, 2000 );
   TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
