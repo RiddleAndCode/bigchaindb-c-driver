@@ -4,3 +4,9 @@
 [submodule "libs/base64"]
 	path = libs/base64
 	url = https://github.com/rafagafe/base64
+[submodule "libs/tiny-json"]
+	path = libs/tiny-json
+	url = https://github.com/rafagafe/tiny-json
+[submodule "libs/json-maker"]
+	path = libs/json-maker
+	url = https://github.com/rafagafe/json-maker
