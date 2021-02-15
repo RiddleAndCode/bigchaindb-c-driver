@@ -12,42 +12,48 @@
 #define ASSET_ID "\"id\":\""
 #define ASSET_ID_LENGTH 6
 
-// copy from json maker
 static char* chtoa(char* dest, char ch) {
-    *dest   = ch;
-    *++dest = '\0';
-    return dest;
-}
-
-static char* atoesc(char* dest, const char *src) {
-    for( ; *src != '\0'; ++dest, ++src ) {
-        *dest = *src;
-    }
-    *dest = '\0';
-    return dest;
+  *dest   = ch;
+  *++dest = '\0';
+  return dest;
 }
 
 static char* atoa(char* dest, const char * src) {
-    for( ; *src != '\0'; ++dest, ++src )
-        *dest = *src;
-    *dest = '\0';
-    return dest;
+  for( ; *src != '\0'; ++dest, ++src )
+      *dest = *src;
+  *dest = '\0';
+  return dest;
 }
 
 static char* strname(char* dest, const char * name) {
     dest = chtoa( dest, '\"' );
     if ( NULL != name ) {
-        dest = atoa(dest, name);
-        dest = atoa(dest, "\":\"");
+      dest = atoa(dest, name);
+      dest = atoa(dest, "\":\"");
     }
     return dest;
 }
 
+/** override `json_str` from json maker with no escaping */
 static char* bcdb_json_str(char* dest, char const* name, char const* value) {
-    dest = strname(dest, name);
-    dest = atoesc(dest, value);
-    dest = atoa(dest, "\",");
-    return dest;
+  dest = strname(dest, name);
+  dest = atoa(dest, value);
+  dest = atoa(dest, "\",");
+  return dest;
+}
+
+/* 
+* parse_json_property_missing
+* Print parsing error to stderr
+*/
+static void parse_json_property_missing(const char* property)
+{
+  fprintf(stderr, "%s%s%s\n", "Error the", property, "property is not found..");
+}
+
+static void parse_json_invalid_length(int len, int max_len)
+{
+  fprintf(stderr, "%s%d%s%d\n", "Error. Len: ", len, " Max: ", max_len);
 }
 
 void der_encode_fulfill(uint8_t *pub_key, uint8_t *sig, uint8_t *fulfill) {
@@ -165,19 +171,15 @@ char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs,
     p = json_str(p, "amount", outputs[i].amount);
     p = json_objOpen(p, "condition");
     p = json_objOpen(p, "details");
-    // p = bcdb_json_str(p, "public_key", outputs[i].details_public_key);
-    // p = bcdb_json_str(p, "type", "ed25519-sha-256");
     p = json_str(p, "public_key", outputs[i].details_public_key);
     p = json_str(p, "type", "ed25519-sha-256");
     p = json_objClose(p);
 
-    // p = bcdb_json_str(p, "uri", bigchain_build_condition_uri(outputs[i].details_public_key, uri_str));
-    p = json_str(p, "uri", bigchain_build_condition_uri(outputs[i].details_public_key, uri_str));
+    p = bcdb_json_str(p, "uri", bigchain_build_condition_uri(outputs[i].details_public_key, uri_str));
     p = json_objClose(p);
 
     p = json_arrOpen(p, "public_keys");
     for (uint8_t j = 0; j < outputs[i].num_public_keys; j++) {
-      // p = bcdb_json_str(p, NULL, outputs[i].public_keys[j]);
       p = json_str(p, NULL, outputs[i].public_keys[j]);
     }
     p = json_arrClose(p);
@@ -199,10 +201,10 @@ char *bigchain_build_json_inputs(BIGCHAIN_INPUT *inputs, uint8_t num_inputs, cha
       p = json_null(p, "fulfillment");
     }
 
-    if (inputs[i].fulfills[0] != '\0') {
+    if (inputs[i].fulfills.transaction_id[0] != '\0') {
       p = json_objOpen(p, "fulfills");
-      // p = atoa(p, &(inputs[i].fulfills));
-      p = atoa(p, (const char*)(inputs[i].fulfills));
+      p = json_int(p, "output_index", inputs[i].fulfills.output_index);
+      p = json_str(p, "transaction_id", inputs[i].fulfills.transaction_id);
       p = json_objClose(p);
     } else {
       p = json_null(p, "fulfills");
@@ -211,7 +213,6 @@ char *bigchain_build_json_inputs(BIGCHAIN_INPUT *inputs, uint8_t num_inputs, cha
     p = json_arrOpen(p, "owners_before");
     for (uint8_t j = 0; j < inputs[i].num_owners; j++) {
       p = json_str(p, NULL, inputs[i].owners_before[j]);
-      // p = bcdb_json_str(p, NULL, inputs[i].owners_before[j]);
     }
     p = json_arrClose(p);
     p = json_objClose(p);
@@ -225,14 +226,12 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
   p = json_objOpen(p, NULL);
 
   // ASSET
-  p = json_objOpen(p, "asset");
   p = atoa(p, tx->asset);
-  p = json_objClose(p);
+  p = atoa(p, ",");
 
   // ID
   if (tx->id[0] != '\0') {
     p = json_str(p, "id", tx->id);
-    // p = bcdb_json_str(p, "id", tx->id);
   } else {
     p = json_null(p, "id");
   }
@@ -241,19 +240,16 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
   p = bigchain_build_json_inputs(tx->inputs, tx->num_inputs, p);
 
   // METADA
-  p = json_objOpen(p, "metadata");
   p = atoa(p, tx->metadata);
-  p = json_objClose(p);
+  p = atoa(p, ",");
 
   // OPERATION
-  // p = bcdb_json_str(p, "operation", tx->operation);
   p = json_str(p, "operation", tx->operation);
 
   // OUTPUTS
   p = bigchain_build_json_outputs(tx->outputs, tx->num_outputs, p);
 
   // VERSION
-  // p = bcdb_json_str(p, "version", tx->version);
   p = json_str(p, "version", tx->version);
   p = json_objClose(p);
   p = json_end(p);
@@ -272,17 +268,49 @@ void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   tx->inputs[0].num_owners = 1;
   tx->num_inputs = 1;
 
+  json_t mem[24];
+  const json_t *asset_obj = json_create((char*)asset, mem, sizeof mem / sizeof *mem);
+  if (!asset_obj) {
+    fprintf(stderr, "Error while parsing asset.");
+    return;
+  }
+  const json_t *asset_field = json_getProperty(asset_obj, "asset");
+  jsonType_t asset__field_type = json_getType(asset_field);
+  if (asset__field_type != JSON_OBJ) {
+    parse_json_property_missing("asset");
+    return;
+  }
+
+  const json_t *metadata_obj = json_create((char*)metadata, mem, sizeof mem / sizeof *mem);
+  if (!metadata_obj) {
+    fprintf(stderr, "Error while parsing metadata.");
+    return;
+  }
+  const json_t *metadata_field = json_getProperty(metadata_obj, "metadata");
+  jsonType_t metadata_field_type = json_getType(metadata_field);
+  if (metadata_field_type != JSON_OBJ) {
+    parse_json_property_missing("metadata");
+    return;
+  }
+
   if (operation == 'C') {
     memcpy(tx->operation, "CREATE", strlen("CREATE"));
+    const json_t *asset_data_field = json_getProperty(asset_field, "data");
+    if (!asset_data_field) {
+      parse_json_property_missing("asset.data");
+      return;
+    }
     memcpy(tx->asset, asset, strlen(asset));
   } else if (operation == 'T') {
     memcpy(tx->operation, "TRANSFER", strlen("TRANSFER"));
-    memcpy(tx->inputs[0].fulfills, FULFILL_PREFIX, FULFILL_PREFIX_LENGTH );
-    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH, asset, TX_ID_LENGTH );
-    memcpy(tx->inputs[0].fulfills + FULFILL_PREFIX_LENGTH + TX_ID_LENGTH, "\"\0", 2);
-    memcpy(tx->asset, ASSET_ID, ASSET_ID_LENGTH);
-    memcpy(tx->asset + ASSET_ID_LENGTH, asset, TX_ID_LENGTH );
-    memcpy(tx->asset + ASSET_ID_LENGTH + TX_ID_LENGTH, "\"\0", 2);
+    const char* asset_id = json_getPropertyValue(asset_field, "id");
+    if (!asset_id) {
+      parse_json_property_missing("asset.id");
+      return;
+    }
+    tx->inputs[0].fulfills.output_index = 0;
+    memcpy(tx->inputs[0].fulfills.transaction_id, asset_id, strlen(asset_id));
+    memcpy(tx->asset, asset, strlen(asset));
   }
 
   memcpy(tx->metadata, metadata, strlen(metadata));
@@ -296,13 +324,6 @@ void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   tx->outputs[0].num_public_keys = 1;
   tx->num_outputs = 1;
 }
-
-
-/* 
-*  No spaces in the json structure: {"key 1": "value a"} becomes '{"key 1":"value a"}'
-*  Keys should be alphabetically ordered: {"key 1":"value a","A key":"A value"} becomes {"A key":"A value","key 1":"value a"}
-*  No numbers fields, only strings {"key 1":2.3123} becomes {"key 1":"2.3123"}
-*/
 
 /* 
 * fulfill_tx
@@ -326,12 +347,6 @@ void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_ke
 /*
 *  partial_fulfill_tx
 *  useful to create fulfillement for each input with potentially different key pair
-* 
-*  for (uint8_t i = 0; i < tx->num_inputs; i++) {
-*    uint8_t sig[140] = {0};
-*    bigchain_sign_transaction((uint8_t *)json, strlen((char*)json), (uint8_t *)priv_key[i], (uint8_t *)pub_key[i], (uint8_t *)sig)
-*    partial_fulfill_tx(tx, sig, pubkey[i], i);
-*  }
 *
 */
 void partial_fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index) {
@@ -346,62 +361,48 @@ void partial_fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t
   bigchain_fulfill(tx, sig, pub_key, input_index);
 }
 
-/* 
-* bigchain_parse_json
-* Handles transaction prepared by JS-bigchain-driver
-*
-*/
-int bigchain_parse_json_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs) 
+int bigchain_parse_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs) 
 {
   const json_t *inputs_field = json_getProperty(json_obj, "inputs");
   if (!inputs_field || JSON_ARRAY != json_getType(inputs_field)) {
-    // puts("the inputs list property is not found.");
     return 0;
   }
 
   memset(inputs, 0, sizeof(BIGCHAIN_INPUT));
   uint8_t i = 0;
   const json_t *input;
-  for(input = json_getChild(inputs_field); input != 0; input = json_getSibling(input) ) {
+
+  for (input = json_getChild(inputs_field); input != 0; input = json_getSibling(input) ) {
     if (JSON_OBJ == json_getType(input)) {
       // FULFILLEMENT
       const char* fulfillment = json_getPropertyValue(input, "fulfillment");
       if (fulfillment) {
         memcpy(inputs[i].fulfillment, fulfillment, strlen(fulfillment));
       }
+
       // FULFILLS
-      const char* fulfills = json_getPropertyValue(input, "fulfills");
-      if (fulfills) {
-        memcpy(inputs[i].fulfills, fulfills, strlen(fulfills));
+      memset(&inputs[i].fulfills, 0, sizeof(BIGCHAIN_INPUT_FULFILLS));
+      json_t const* fulfills_obj = json_getProperty(input, "fulfills");
+      if (fulfills_obj && JSON_OBJ == json_getType(fulfills_obj)) {
+        const json_t *output_index_field = json_getProperty(fulfills_obj, "output_index");
+        int output_index =  json_getInteger(output_index_field);
+        const char *transaction_id = json_getPropertyValue(fulfills_obj, "transaction_id");
+        if (transaction_id && output_index) {
+          inputs[0].fulfills.output_index = output_index;
+          memcpy(inputs[0].fulfills.transaction_id, transaction_id, strlen(transaction_id));
+        } else {
+          memset(inputs[i].fulfills.transaction_id, 0, 65);
+          // inputs[i].fulfills.output_index = NULL;
+        }
+      } else {
+        memset(inputs[i].fulfills.transaction_id, 0, 65);
+        // inputs[i].fulfills.output_index = NULL;
       }
 
-      // json_t const* fulfills_obj = json_getProperty(input, "fulfills");
-      // if (!fulfills_obj || JSON_OBJ != json_getType(fulfills_obj)) {
-      //   puts("Error, the fulfills property is not found.");
-      //   return 0;
-      // }
-      // const char* transaction_id = json_getPropertyValue(fulfills_obj, "transaction_id");
-      // const char* output_index = json_getPropertyValue(fulfills_obj, "output_index");
-      // if (transaction_id && output_index) {
-      //   memcpy(inputs[0].fulfills, FULFILL_PREFIX, FULFILL_PREFIX_LENGTH );
-      //   memcpy(inputs[0].fulfills + FULFILL_PREFIX_LENGTH, transaction_id, TX_ID_LENGTH );
-      //   memcpy(inputs[0].fulfills + FULFILL_PREFIX_LENGTH + TX_ID_LENGTH, "\"\0", 2);
-      //   memcpy(inputs[0].fulfills + FULFILL_PREFIX_LENGTH + TX_ID_LENGTH, output_index, 1);
-      // } 
-
-      // num_owners
-      const json_t *num_owners_key = json_getProperty(input, "num_owners");
-      if (!num_owners_key || JSON_INTEGER != json_getType(num_owners_key) ) {
-        puts("Error, the num_owners property is not found.");
-        return 0;
-      }
-      int const num_owners = (int)json_getInteger(num_owners_key);
-      inputs[i].num_owners = num_owners;
-
-      // owners_before
+      // OWNERS_BEFORE
       const json_t *owners_before = json_getProperty(input, "owners_before");
       if (!owners_before || JSON_ARRAY != json_getType(owners_before) ) {
-        puts("Error, the owners_before list property is not found.");
+        parse_json_property_missing("owners_before list");
         return 0;
       }
       uint8_t j = 0;
@@ -413,6 +414,7 @@ int bigchain_parse_json_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs)
         }
         j++;
       }
+      inputs[i].num_owners = j;
     }
     i++;
   }
@@ -420,14 +422,13 @@ int bigchain_parse_json_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs)
 }
 
 
-int bigchain_parse_json_outputs(const json_t* json_obj, BIGCHAIN_OUTPUT *outputs) 
+int bigchain_parse_outputs(const json_t* json_obj, BIGCHAIN_OUTPUT *outputs) 
 {
   const json_t *outputs_field = json_getProperty(json_obj, "outputs");
   if (!outputs_field || JSON_ARRAY != json_getType(outputs_field)) {
-    // puts("the outputs list property is not found.");
     return 0;
   }
-  
+
   memset(outputs, 0, sizeof(BIGCHAIN_OUTPUT));
   uint8_t i = 0;
   const json_t *output;
@@ -442,44 +443,37 @@ int bigchain_parse_json_outputs(const json_t* json_obj, BIGCHAIN_OUTPUT *outputs
       // CONDITION
       const json_t *condition = json_getProperty(output, "condition");
       if (!condition || JSON_OBJ != json_getType(condition)) {
-        puts("Error, the condition property is not found.");
+        parse_json_property_missing("condition");
         return 0;
       }
 
-      // condition->details
+      // CONDITION->details
       const json_t *details = json_getProperty(condition, "details");
       if (!details || JSON_OBJ != json_getType(details)) {
-        puts("Error, the details property is not found.");
+        parse_json_property_missing("details");
         return 0;
       }
+
       // const char* details_type = json_getPropertyValue(details, "type");
       // if (details_type) {
       //   memcpy(outputs[i].details_type, details_type, strlen(details_type));
-      // }    
+      // }
+
       const char* details_public_key = json_getPropertyValue(details, "public_key");
       if (details_public_key) {
         memcpy(outputs[i].details_public_key, details_public_key, strlen(details_public_key));
       }       
 
-      // condition->uri
+      // CONDITION->uri
       // const char* uri = json_getPropertyValue(details, "uri");
       // if (uri) {
       //   memcpy(outputs[i].condition.uri, uri, strlen(uri));
       // }    
 
-      // num_public_keys
-      const json_t *num_public_keys_key = json_getProperty(output, "num_public_keys");
-      if (!num_public_keys_key || JSON_INTEGER != json_getType(num_public_keys_key) ) {
-        puts("Error, the num_public_keys property is not found.");
-        return 0;
-      }
-      int const num_public_keys = (int)json_getInteger(num_public_keys_key);
-      outputs[i].num_public_keys = num_public_keys;
-
-      // public_keys
+      // PUBLIC_KEYS
       const json_t *public_keys = json_getProperty(output, "public_keys");
       if (!public_keys || JSON_ARRAY != json_getType(public_keys)) {
-        puts("Error, the public_keys list property is not found.");
+        parse_json_property_missing("public_keys list");
         return 0;
       }
       uint8_t j = 0;
@@ -491,6 +485,7 @@ int bigchain_parse_json_outputs(const json_t* json_obj, BIGCHAIN_OUTPUT *outputs
         }
         j++;
       }
+      outputs[i].num_public_keys = j;
     }
     i++;
   }
@@ -502,40 +497,23 @@ static char* bigchain_parse_object(const json_t *json, char *str, const char *na
   const jsonType_t type = json_getType(json);
   char *p = str;
   if (type != JSON_OBJ && type != JSON_ARRAY) {
-    // puts("Input is not an object.");
     return p;
   }
 
   if (type == JSON_OBJ) {
-    if ( NULL != name ) {
-      p = json_objOpen(p, NULL);
-    } else {
-      p = json_objOpen(p, name);
-    }
+    p = json_objOpen(p, name);
   } else {
-    if ( NULL != name ) {
-      p = json_arrOpen(p, NULL);
-    } else {
-      p = json_arrOpen(p, name);
-    }
+    p = json_arrOpen(p, name);
   }
 
   const json_t *child;
   for (child = json_getChild(json); child != 0; child = json_getSibling(child)) {
     jsonType_t propertyType = json_getType(child);
-    const char* child_name = json_getName(child);
-    // if (child_name) {
-    //   printf(" \"%s\": ", child_name);
-    // }
+    const char *child_name = json_getName(child);
     if (propertyType == JSON_OBJ || propertyType == JSON_ARRAY) {
       p = bigchain_parse_object(child, p, child_name);
-      // char child_str[200];
-      // bigchain_parse_object(child, child_str, NULL);
-      // p = json_objOpen(p, child_name);
-      // p = atoa(p, child_str);
-      // p = json_objClose(p);
     } else {
-      char const* value = json_getValue(child);
+      const char *value = json_getValue(child);
       if (value) {
         if (value[0] != '\0') {
           p = json_str(p, child_name, value);
@@ -554,104 +532,78 @@ static char* bigchain_parse_object(const json_t *json, char *str, const char *na
   return p;
 }
 
-int bigchain_parse_asset(const json_t *json_obj, char* asset) 
+int bigchain_parse_field(const json_t *json_obj, const char *field_name, char *output) 
 {
-  const json_t *asset_field = json_getProperty(json_obj, "asset");
-  const jsonType_t type = json_getType(asset_field);
+  const json_t *field = json_getProperty(json_obj, field_name);
+  const jsonType_t type = json_getType(field);
   if (type != JSON_OBJ && type != JSON_ARRAY) {
-    puts("Error, the asset property is not found.");
+    parse_json_property_missing(field_name);
     return 0;
   }
-  char* p = bigchain_parse_object(asset_field, asset, NULL);
+  char *p = bigchain_parse_object(field, output, field_name);
   p = json_end(p);
-  return p - asset;
+  return p - output;
 }
 
-int bigchain_parse_metadata(const json_t *json_obj, char* metadata) 
-{
-  const json_t *metadata_field = json_getProperty(json_obj, "metadata");
-  const jsonType_t type = json_getType(metadata_field);
-  if (type != JSON_OBJ && type != JSON_ARRAY) {
-    puts("Error, the metadata property is not found.");
-    return 0;
-  }
-  char* p = bigchain_parse_object(metadata_field, metadata, NULL);
-  p = json_end(p);
-  return p - metadata;
-}
-
-// TODO: add max fields, max asset and metadata sizes 
 int bigchain_parse_json(char* json_tx, BIGCHAIN_TX *tx) {
-    memzero(tx, sizeof(BIGCHAIN_TX));
-    json_t mem[128];
-    const json_t *json_obj = json_create((char*)json_tx, mem, sizeof mem / sizeof *mem);
-    if (!json_obj) {
-      puts("Error json create.");
-      return 0;
-    }
-    
-    // ID
-    const char* id = json_getPropertyValue(json_obj, "id");
-    if (id) {
-      memcpy(tx->id, id, strlen(id));
-      // puts("Error, the id property is not found.");
-      // return 0;
-    }	
+  // TODO: add max fields, max asset and metadata sizes arguments
+  memzero(tx, sizeof(BIGCHAIN_TX));
+  json_t mem[128];
+  const json_t *json_obj = json_create((char*)json_tx, mem, sizeof mem / sizeof *mem);
+  if (!json_obj) {
+    fprintf(stderr, "Error while parsing json.");
+    return 0;
+  }
+  
+  // ASSET
+  char asset[ASSET_MAX_SIZE];
+  int len = bigchain_parse_field(json_obj, "asset", asset);
+  if (len >= sizeof asset) {
+    parse_json_invalid_length(len, (int)sizeof asset - 1);
+    return 0;
+  }
+  memcpy(tx->asset, asset, strlen(asset));
 
-    // VERSION
-    const char* version = json_getPropertyValue(json_obj, "version");
-    if (!version) {
-      puts("Error, the version property is not found.");
-      return 0;
-    }	
-    // TODO: validate version
-    memcpy(tx->version, version, strlen(version));
+  // ID
+  const char* id = json_getPropertyValue(json_obj, "id");
+  if (id) {
+    memcpy(tx->id, id, strlen(id));
+  }	
+  
+  // INPUTS
+  int num_inputs = bigchain_parse_inputs(json_obj, tx->inputs);
+  tx->num_inputs = num_inputs;
 
-    // OPERATION
-    const char* operation = json_getPropertyValue(json_obj, "operation");
-    if (!operation) {
-      puts("Error, the operation property is not found.");
-      return 0;
-    }	
-    // TODO: validate operation
-    memcpy(tx->operation, operation, strlen(operation));
+  // METADATA
+  char metadata[METADATA_MAX_SIZE];
+  len = bigchain_parse_field(json_obj, "metadata", metadata);
+  if (len >= sizeof asset) {
+    parse_json_invalid_length(len, (int)sizeof metadata - 1);
+    return 0;
+  }
+  memcpy(tx->metadata, metadata, strlen(metadata));
 
-    // ASSET
-    // TODO: how to set buffer size ?
-    char asset[1024];
-    int len = bigchain_parse_asset(json_obj, asset);
-    if (len >= sizeof asset) {
-      fprintf(stderr, "%s%d%s%d\n", "Error. Len: ", len, " Max: ", (int)sizeof asset - 1 );
-      return 0;
-    }
-    if (strcmp(operation, "CREATE") == 0) {
-      memcpy(tx->asset, asset, strlen(asset));
-    } else if (strcmp(operation, "TRANSFER") == 0) {
-      const json_t *asset_field = json_getProperty(json_obj, "asset");
-      const char* asset_id = json_getPropertyValue(asset_field, "id");
-      memcpy(tx->asset, ASSET_ID, ASSET_ID_LENGTH);
-      memcpy(tx->asset + ASSET_ID_LENGTH, asset_id, TX_ID_LENGTH );
-      memcpy(tx->asset + ASSET_ID_LENGTH + TX_ID_LENGTH, "\"\0", 2);
-    }
+  // OPERATION
+  const char* operation = json_getPropertyValue(json_obj, "operation");
+  // TODO: validate operation
+  if (!operation) {
+    parse_json_property_missing("operation");
+    return 0;
+  }	
+  memcpy(tx->operation, operation, strlen(operation));
 
-    // METADATA
-    // TODO: how to set buffer size ?
-    char metadata[1024];
-    len = bigchain_parse_metadata(json_obj, metadata);
-    if (len >= sizeof asset) {
-      fprintf(stderr, "%s%d%s%d\n", "Error. Len: ", len, " Max: ", (int)sizeof metadata - 1 );
-      return 0;
-    }
-    memcpy(tx->metadata, metadata, strlen(metadata));
+  // OUTPUTS
+  int num_outputs = bigchain_parse_outputs(json_obj, tx->outputs);
+  tx->num_outputs = num_outputs;
 
-    // INPUTS
-    int num_inputs = bigchain_parse_json_inputs(json_obj, tx->inputs);
-    tx->num_inputs = num_inputs;
+  // VERSION
+  const char* version = json_getPropertyValue(json_obj, "version");
+  //? TODO: validate version
+  if (!version) {
+    parse_json_property_missing("version");
+    return 0;
+  }	
+  memcpy(tx->version, version, strlen(version));
 
-    // OUTPUTS
-    int num_outputs = bigchain_parse_json_outputs(json_obj, tx->outputs);
-    tx->num_outputs = num_outputs;
-
-    return 1;
+  return 1;
 }
-
