@@ -62,9 +62,9 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx);
 int bigchain_parse_inputs(const json_t *json_obj, BIGCHAIN_INPUT *inputs);
 int bigchain_parse_outputs(const json_t *json_obj, BIGCHAIN_OUTPUT *outputs);
 int bigchain_parse_field(const json_t *json_obj, const char* field_name, char* output);
-int bigchain_parse_json(char *json_tx, BIGCHAIN_TX *tx);
+bool bigchain_parse_json(char *json_tx, BIGCHAIN_TX *tx);
 
-void prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata, char *base_pubkey);
+bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata, char *base_pubkey);
 void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index);
 void partial_fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index);
 
