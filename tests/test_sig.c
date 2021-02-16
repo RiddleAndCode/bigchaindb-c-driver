@@ -1,8 +1,10 @@
 #include "tests.h"
 
-#define TEST_CREATE_ASSET	"\"data\":{\"bicycle\":{\"manufacturer\":\"bkfab\",\"serial_number\":\"abcd1234\"}}"
-#define TEST_TRANSFER_ASSET "c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53"
-#define TEST_METADATA "\"planet\":\"earth\""
+#define TEST_CREATE_ASSET	"{\"asset\":{\"data\":{\"bicycle\":{\"manufacturer\":\"bkfab\",\"serial_number\":\"abcd1234\"}}}}"
+#define TEST_ASSET_ID "c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53"
+#define TEST_TRANSFER_ASSET "{\"asset\":{\"id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"}}"
+#define TEST_METADATA "{\"metadata\":{\"planet\":\"earth\"}}"
+
 #define TEST_OPERATION_CREATE 'C'
 #define TEST_OPERATION_TRANSFER 'T'
 #define TEST_VERSION "2.0"
@@ -32,7 +34,8 @@ void prepare_inputs(char operation, BIGCHAIN_INPUT *inputs, uint8_t *num_inputs)
   // Fill input struct
   memcpy(inputs[0].owners_before[0], TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
   if(operation == 'T') {
-    strcpy(inputs[0].fulfills, "\"output_index\":0,\"transaction_id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"" );
+    inputs[0].fulfills.output_index = 0;
+    strcpy(inputs[0].fulfills.transaction_id, "c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53");
   } else if(operation != 'C') {
     return;
   }
@@ -104,7 +107,7 @@ void test_bigchain_create_tx() {
   char json[3000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
   prepare_tx(&tx, TEST_OPERATION_CREATE, TEST_CREATE_ASSET, TEST_METADATA, base58_pubkey );
-  fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 );
+  fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 , 0);
   TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
 
@@ -113,7 +116,7 @@ void test_bigchain_transfer_tx() {
   char json[2000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
   prepare_tx(&tx, TEST_OPERATION_TRANSFER, TEST_TRANSFER_ASSET, TEST_METADATA, base58_pubkey ) ;
-  fulfill_tx(&tx, TEST_TRANSFER_ASSET, privkey, pubkey, json, 2000 );
+  fulfill_tx(&tx, TEST_ASSET_ID, privkey, pubkey, json, 2000, 0);
   TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
 
@@ -126,6 +129,16 @@ void test_b58tobin() {
   TEST_ASSERT_EQUAL_INT8_ARRAY( pubkey, pubkey_test, 32 );
 }
 
+void test_bigchain_parse_json() {
+  BIGCHAIN_TX tx;
+  char json[3000] = {0};
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
+  memcpy(json, C_tx_json, strlen(C_tx_json));
+  bigchain_parse_json(json, &tx);
+  TEST_ASSERT_EQUAL_STRING("c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53", tx.id);
+  // TODO: add more assertion
+}
+
 int main(void) {
   test_b58tobin();
   UNITY_BEGIN();
@@ -135,5 +148,6 @@ int main(void) {
   RUN_TEST(test_bigchain_create_tx);
   RUN_TEST(test_bigchain_transfer_tx);
   RUN_TEST(test_b58tobin);
+  RUN_TEST(test_bigchain_parse_json);
   return UNITY_END();
 }
