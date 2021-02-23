@@ -18,17 +18,33 @@
 
 #define ASSET_MAX_SIZE 1024
 #define METADATA_MAX_SIZE 1024
-#define ASSET_MAX_SIZE 1024
-#define METADATA_MAX_SIZE 1024
+
+typedef struct CC {
+    char type[64];
+    union {
+        // public key types
+        // struct { char public_key[45], *signature; };
+        struct { char public_key[45]; };
+        // threshold
+        struct { long threshold; uint8_t size; struct CC **subconditions; };
+    };
+} CC;
+
+/** Structure representing BigChainDB output's condition (only fit Ed25519). */
+typedef struct {
+  CC details;
+  char uri[256];
+} BIGCHAIN_CONDITION;
 
 /** Structure representing BigChainDB a transaction's output properties. */
 typedef struct {
   char amount[8];
+  BIGCHAIN_CONDITION condition;
   // FIXED CONDITION FOR EDCURVE
-  char details_public_key[45];
   char public_keys[8][45];
   uint8_t num_public_keys;
 } BIGCHAIN_OUTPUT;
+
 
 /** Structure representing BigChainDB a fulfilled transaction's input properties. */
 typedef struct {
@@ -178,26 +194,24 @@ bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
 /** void fulfill_tx
   * Fulfill a prepared transaction's input with a given key pair and serialize the transaction.
   * @param tx A pointer to BIGCHAIN_TX struct.
-  * @param tx_id A char array that will contain the transaction id.
   * @param priv_key Public key as uint8_t array .
   * @param pub_key Private key as uint8_t array.
   * @param json A uint8_t array that will contain serialized JSON transaction.
   * @param maxlen A uint16_t indicating max length of the output JSON.
   * @param input_index A uint8_t indicating which input to fulfill.
   */
-void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index);
+void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index);
 
 /** void partial_fulfill_tx
   *  Used to create fulfillement for each input with different key pair.
   *  Fulfill a prepared transaction with a given key pair, without serializing the transaction.
   * @param tx A pointer to BIGCHAIN_TX struct.
-  * @param tx_id A char array that will contain the transaction id.
   * @param priv_key Public key as uint8_t array .
   * @param pub_key Private key as uint8_t array.
   * @param json A uint8_t array that will contain serialized JSON transaction.
   * @param maxlen A uint16_t indicating max length of the output JSON.
   * @param input_index A uint8_t indicating which input to fulfill.
   */
-void partial_fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index);
+void partial_fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index);
 
 #endif // _BIGCHAIN_TX_H_

@@ -6,11 +6,6 @@
 #endif
 
 #define DEFAULT_URI "ni:///sha-256;WVm8YmcTjv05Osmho-Hc7o6N2Hg0YvgsKdaidCaRb0Q?fpt=ed25519-sha-256&cost=131072"
-#define FULFILL_PREFIX "\"output_index\":0,\"transaction_id\":\""
-#define FULFILL_PREFIX_LENGTH 35
-#define TX_ID_LENGTH 64
-#define ASSET_ID "\"id\":\""
-#define ASSET_ID_LENGTH 6
 
 static char* chtoa(char* dest, char ch) {
   *dest   = ch;
@@ -176,11 +171,11 @@ char *bigchain_build_json_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t num_outputs,
     p = json_str(p, "amount", outputs[i].amount);
     p = json_objOpen(p, "condition");
     p = json_objOpen(p, "details");
-    p = json_str(p, "public_key", outputs[i].details_public_key);
-    p = json_str(p, "type", "ed25519-sha-256");
+    p = json_str(p, "public_key", outputs[i].condition.details.public_key);
+    p = json_str(p, "type", outputs[i].condition.details.type);
     p = json_objClose(p);
 
-    p = bcdb_json_str(p, "uri", bigchain_build_condition_uri(outputs[i].details_public_key, uri_str));
+    p = bcdb_json_str(p, "uri", bigchain_build_condition_uri(outputs[i].condition.details.public_key, uri_str));
     p = json_objClose(p);
 
     p = json_arrOpen(p, "public_keys");
@@ -330,7 +325,11 @@ bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   // OUTPUTS
   memset(tx->outputs, 0, sizeof(BIGCHAIN_OUTPUT));
   tx->outputs[0].amount[0] = '1';
-  memcpy(tx->outputs[0].details_public_key, base_pubkey, strlen(base_pubkey));
+  
+  memset(&tx->outputs[0].condition, 0, sizeof(BIGCHAIN_CONDITION));
+  memset(&tx->outputs[0].condition.details, 0, sizeof(CC));
+  memcpy(tx->outputs[0].condition.details.public_key, base_pubkey, strlen(base_pubkey));
+  memcpy(tx->outputs[0].condition.details.type, "ed25519-sha-256", strlen("ed25519-sha-256"));
   memcpy(tx->outputs[0].public_keys[0], base_pubkey, strlen(base_pubkey));
   tx->outputs[0].num_public_keys = 1;
   tx->num_outputs = 1;
@@ -338,25 +337,29 @@ bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   return true;
 }
 
-void fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index) {
+void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index) {
   uint8_t sig[140] = {0};
   bigchain_build_json_tx(tx, (char*)json);
   if (strcmp(tx->operation, "TRANSFER") == 0) {
     // For TRANSFER the json string must be concatenated with the input tx_id and the output_index
-    strcat((char*)json, tx_id);
-    strcat((char*)json, "0");
+    char output_index[10];  
+    sprintf(output_index, "%d", tx->inputs[input_index].fulfills.output_index);
+    strcat((char*)json, tx->inputs[input_index].fulfills.transaction_id);
+    strcat((char*)json, output_index);
   }
 
   bigchain_sign_transaction((uint8_t *)json, strlen((char*)json), (uint8_t *)priv_key, (uint8_t *)pub_key, (uint8_t *)sig);
   bigchain_fulfill_and_serialize(tx, (uint8_t *)json, maxlen, (uint8_t *)sig, (uint8_t *)pub_key, input_index);
 }
 
-void partial_fulfill_tx(BIGCHAIN_TX *tx, char *tx_id, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index) {
+void partial_fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index) {
   uint8_t sig[140] = {0};
   bigchain_build_json_tx(tx, (char*)json);
   if (strcmp(tx->operation, "TRANSFER") == 0) {
-    strcat((char*)json, tx_id);
-    strcat((char*)json, "0");
+    char output_index[10];  
+    sprintf(output_index, "%d", tx->inputs[input_index].fulfills.output_index);
+    strcat((char*)json, tx->inputs[input_index].fulfills.transaction_id);
+    strcat((char*)json, output_index);
   }
   bigchain_sign_transaction((uint8_t *)json, strlen((char*)json), (uint8_t *)priv_key, (uint8_t *)pub_key, (uint8_t *)sig);
   bigchain_fulfill(tx, sig, pub_key, input_index);
@@ -388,15 +391,15 @@ int bigchain_parse_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs)
         const json_t *output_index_field = json_getProperty(fulfills_obj, "output_index");
         int output_index =  json_getInteger(output_index_field);
         const char *transaction_id = json_getPropertyValue(fulfills_obj, "transaction_id");
-        if (transaction_id && output_index) {
-          inputs[0].fulfills.output_index = output_index;
-          memcpy(inputs[0].fulfills.transaction_id, transaction_id, strlen(transaction_id));
+        if (transaction_id) {
+          inputs[i].fulfills.output_index = output_index;
+          memcpy(inputs[i].fulfills.transaction_id, transaction_id, strlen(transaction_id));
         } else {
-          memset(inputs[i].fulfills.transaction_id, 0, 65);
+          // memset(inputs[i].fulfills.transaction_id, 0, 65);
           // inputs[i].fulfills.output_index = NULL;
         }
       } else {
-        memset(inputs[i].fulfills.transaction_id, 0, 65);
+        // memset(inputs[i].fulfills.transaction_id, 0, 65);
         // inputs[i].fulfills.output_index = NULL;
       }
 
@@ -454,21 +457,21 @@ int bigchain_parse_outputs(const json_t *json_obj, BIGCHAIN_OUTPUT *outputs) {
         return 0;
       }
 
-      // const char* details_type = json_getPropertyValue(details, "type");
-      // if (details_type) {
-      //   memcpy(outputs[i].details_type, details_type, strlen(details_type));
-      // }
+      const char* details_type = json_getPropertyValue(details, "type");
+      if (details_type) {
+        memcpy(outputs[i].condition.details.type, details_type, strlen(details_type));
+      }
 
       const char* details_public_key = json_getPropertyValue(details, "public_key");
       if (details_public_key) {
-        memcpy(outputs[i].details_public_key, details_public_key, strlen(details_public_key));
+        memcpy(outputs[i].condition.details.public_key, details_public_key, strlen(details_public_key));
       }       
 
       // CONDITION->uri
-      // const char* uri = json_getPropertyValue(details, "uri");
-      // if (uri) {
-      //   memcpy(outputs[i].condition.uri, uri, strlen(uri));
-      // }    
+      const char* uri = json_getPropertyValue(details, "uri");
+      if (uri) {
+        memcpy(outputs[i].condition.uri, uri, strlen(uri));
+      }    
 
       // PUBLIC_KEYS
       const json_t *public_keys = json_getProperty(output, "public_keys");
