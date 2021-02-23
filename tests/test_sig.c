@@ -9,6 +9,7 @@
 #define TEST_OPERATION_TRANSFER 'T'
 #define TEST_VERSION "2.0"
 #define TEST_OWNER_BEFORE "6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9"
+#define TEST_CONDITION_TYPE "ed25519-sha-256"
 #define TEST_INPUTS_CREATE "\"inputs\":[{\"fulfillment\":null,\"fulfills\":null,\"owners_before\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}]"
 #define TEST_INPUTS_TRANSFER "\"inputs\":[{\"fulfillment\":null,\"fulfills\":{\"output_index\":0,\"transaction_id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"},\"owners_before\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}]"
 #define TEST_OUTPUTS "\"outputs\":[{\"amount\":\"1\",\"condition\":{\"details\":{\"public_key\":\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\",\"type\":\"ed25519-sha-256\"},\"uri\":\"ni:///sha-256;WVm8YmcTjv05Osmho-Hc7o6N2Hg0YvgsKdaidCaRb0Q?fpt=ed25519-sha-256&cost=131072\"},\"public_keys\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}]"
@@ -48,7 +49,8 @@ void prepare_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t *num_outputs) {
 
   // Fill output struct
   outputs[0].amount[0] = '1';
-  memcpy(outputs[0].details_public_key, TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
+  memcpy(outputs[0].condition.details.type, TEST_CONDITION_TYPE, strlen(TEST_CONDITION_TYPE));
+  memcpy(outputs[0].condition.details.public_key, TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
   memcpy(outputs[0].public_keys[0], TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
   outputs[0].num_public_keys = 1;
   *num_outputs = 1;
@@ -107,7 +109,7 @@ void test_bigchain_create_tx() {
   char json[3000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
   prepare_tx(&tx, TEST_OPERATION_CREATE, TEST_CREATE_ASSET, TEST_METADATA, base58_pubkey );
-  fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 , 0);
+  fulfill_tx(&tx, privkey, pubkey, json, 3000 , 0);
   TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
 
@@ -116,7 +118,8 @@ void test_bigchain_transfer_tx() {
   char json[2000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
   prepare_tx(&tx, TEST_OPERATION_TRANSFER, TEST_TRANSFER_ASSET, TEST_METADATA, base58_pubkey ) ;
-  fulfill_tx(&tx, TEST_ASSET_ID, privkey, pubkey, json, 2000, 0);
+  // fulfill_tx(&tx, TEST_ASSET_ID, privkey, pubkey, json, 2000, 0);
+  fulfill_tx(&tx, privkey, pubkey, json, 2000, 0);
   TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
 
