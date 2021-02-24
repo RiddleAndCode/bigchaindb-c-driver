@@ -115,7 +115,7 @@ void test_bigchain_create_tx() {
   prepare_tx(&tx, TEST_OPERATION_CREATE, asset_clone, metadata_clone, base58_pubkey );
   free(metadata_clone);
   free(asset_clone);
-  fulfill_tx(&tx, privkey, pubkey, json, 3000 , 0);
+  fulfill_tx(&tx, privkey, pubkey, json, 3000, 0);
   TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
 
