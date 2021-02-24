@@ -6,6 +6,7 @@
 #endif
 
 #define DEFAULT_URI "ni:///sha-256;WVm8YmcTjv05Osmho-Hc7o6N2Hg0YvgsKdaidCaRb0Q?fpt=ed25519-sha-256&cost=131072"
+#define DEFAULT_CONDITION_TYPE "ed25519-sha-256"
 
 static char* chtoa(char* dest, char ch) {
   *dest   = ch;
@@ -15,18 +16,18 @@ static char* chtoa(char* dest, char ch) {
 
 static char* atoa(char* dest, const char * src) {
   for( ; *src != '\0'; ++dest, ++src )
-      *dest = *src;
+    *dest = *src;
   *dest = '\0';
   return dest;
 }
 
 static char* strname(char* dest, const char * name) {
-    dest = chtoa( dest, '\"' );
-    if ( NULL != name ) {
-      dest = atoa(dest, name);
-      dest = atoa(dest, "\":\"");
-    }
-    return dest;
+  dest = chtoa( dest, '\"' );
+  if ( NULL != name ) {
+    dest = atoa(dest, name);
+    dest = atoa(dest, "\":\"");
+  }
+  return dest;
 }
 
 /** override `json_str` from json maker with no escaping */
@@ -37,7 +38,7 @@ static char* bcdb_json_str(char* dest, char const* name, char const* value) {
   return dest;
 }
 
-/* 
+/*
 * parse_json_invalid
 * Called when a string cannot be opened as JSON
 * Print parsing error to stderr
@@ -46,7 +47,7 @@ static void parse_json_invalid(const char *object_name) {
   fprintf(stderr, "%s%s%s\n", "Error while parsing ", object_name, " .");
 }
 
-/* 
+/*
 * parse_json_property_missing
 * Called when a required property is missing
 * Print parsing error to stderr
@@ -325,15 +326,14 @@ bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   // OUTPUTS
   memset(tx->outputs, 0, sizeof(BIGCHAIN_OUTPUT));
   tx->outputs[0].amount[0] = '1';
-  
   memset(&tx->outputs[0].condition, 0, sizeof(BIGCHAIN_CONDITION));
   memset(&tx->outputs[0].condition.details, 0, sizeof(CC));
   memcpy(tx->outputs[0].condition.details.public_key, base_pubkey, strlen(base_pubkey));
-  memcpy(tx->outputs[0].condition.details.type, "ed25519-sha-256", strlen("ed25519-sha-256"));
+  memcpy(tx->outputs[0].condition.details.type, DEFAULT_CONDITION_TYPE, sizeof(DEFAULT_CONDITION_TYPE));
   memcpy(tx->outputs[0].public_keys[0], base_pubkey, strlen(base_pubkey));
   tx->outputs[0].num_public_keys = 1;
   tx->num_outputs = 1;
-    
+
   return true;
 }
 
@@ -342,7 +342,7 @@ void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *j
   bigchain_build_json_tx(tx, (char*)json);
   if (strcmp(tx->operation, "TRANSFER") == 0) {
     // For TRANSFER the json string must be concatenated with the input tx_id and the output_index
-    char output_index[10];  
+    char output_index[10];
     sprintf(output_index, "%d", tx->inputs[input_index].fulfills.output_index);
     strcat((char*)json, tx->inputs[input_index].fulfills.transaction_id);
     strcat((char*)json, output_index);
@@ -356,7 +356,7 @@ void partial_fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, ui
   uint8_t sig[140] = {0};
   bigchain_build_json_tx(tx, (char*)json);
   if (strcmp(tx->operation, "TRANSFER") == 0) {
-    char output_index[10];  
+    char output_index[10];
     sprintf(output_index, "%d", tx->inputs[input_index].fulfills.output_index);
     strcat((char*)json, tx->inputs[input_index].fulfills.transaction_id);
     strcat((char*)json, output_index);
@@ -365,8 +365,7 @@ void partial_fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, ui
   bigchain_fulfill(tx, sig, pub_key, input_index);
 }
 
-int bigchain_parse_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs) 
-{
+int bigchain_parse_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs) {
   const json_t *inputs_field = json_getProperty(json_obj, "inputs");
   if (!inputs_field || JSON_ARRAY != json_getType(inputs_field)) {
     return 0;
@@ -465,13 +464,13 @@ int bigchain_parse_outputs(const json_t *json_obj, BIGCHAIN_OUTPUT *outputs) {
       const char* details_public_key = json_getPropertyValue(details, "public_key");
       if (details_public_key) {
         memcpy(outputs[i].condition.details.public_key, details_public_key, strlen(details_public_key));
-      }       
+      }
 
       // CONDITION->uri
       const char* uri = json_getPropertyValue(details, "uri");
       if (uri) {
         memcpy(outputs[i].condition.uri, uri, strlen(uri));
-      }    
+      }
 
       // PUBLIC_KEYS
       const json_t *public_keys = json_getProperty(output, "public_keys");
@@ -547,7 +546,7 @@ bool bigchain_parse_json(char* json_tx, BIGCHAIN_TX *tx) {
     parse_json_invalid("Transaction");
     return false;
   }
-  
+
   // ASSET
   char asset[ASSET_MAX_SIZE];
   int len = bigchain_parse_field(json_obj, "asset", asset);
@@ -561,8 +560,8 @@ bool bigchain_parse_json(char* json_tx, BIGCHAIN_TX *tx) {
   const char* id = json_getPropertyValue(json_obj, "id");
   if (id) {
     memcpy(tx->id, id, strlen(id));
-  }	
-  
+  }
+
   // INPUTS
   int num_inputs = bigchain_parse_inputs(json_obj, tx->inputs);
   tx->num_inputs = num_inputs;
@@ -582,7 +581,7 @@ bool bigchain_parse_json(char* json_tx, BIGCHAIN_TX *tx) {
   if (!operation) {
     parse_json_property_missing("operation");
     return false;
-  }	
+  }
   memcpy(tx->operation, operation, strlen(operation));
 
   // OUTPUTS
@@ -595,7 +594,7 @@ bool bigchain_parse_json(char* json_tx, BIGCHAIN_TX *tx) {
   if (!version) {
     parse_json_property_missing("version");
     return false;
-  }	
+  }
   memcpy(tx->version, version, strlen(version));
 
   return true;

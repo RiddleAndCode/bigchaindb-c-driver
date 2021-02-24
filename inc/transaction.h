@@ -20,14 +20,20 @@
 #define METADATA_MAX_SIZE 1024
 
 typedef struct CC {
-    char type[64];
-    union {
-        // public key types
-        // struct { char public_key[45], *signature; };
-        struct { char public_key[45]; };
-        // threshold
-        struct { long threshold; uint8_t size; struct CC **subconditions; };
+  char type[64];
+  union {
+    // public key types
+    // struct { char public_key[45], *signature; };
+    struct {
+      char public_key[45];
     };
+    // threshold
+    struct {
+      long threshold;
+      uint8_t size;
+      struct CC **subconditions;
+    };
+  };
 } CC;
 
 /** Structure representing BigChainDB output's condition (only fit Ed25519). */
@@ -74,7 +80,7 @@ typedef struct {
 } BIGCHAIN_TX;
 
 /**
-  * void bigchain_fulfill 
+  * void bigchain_fulfill
   * Create the DER encoded fulfillement for a given transaction's input.
   * @param tx A pointer to BIGCHAIN_TX struct.
   * @param priv_key Public key useable to verify signature as uint8_t array .
@@ -84,7 +90,7 @@ typedef struct {
 void bigchain_fulfill(BIGCHAIN_TX *tx, uint8_t *sig, uint8_t *pub_key, uint8_t input_index);
 
 /**
-  * void bigchain_serialize 
+  * void bigchain_serialize
   * Generate transaction's id by hashing the serialized transaction, populate tx.id and update JSON string
   * @param tx A pointer to BIGCHAIN_TX struct.
   * @param json_tx Transaction as JSON string.
@@ -93,7 +99,7 @@ void bigchain_fulfill(BIGCHAIN_TX *tx, uint8_t *sig, uint8_t *pub_key, uint8_t i
 void bigchain_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen);
 
 /**
-  * void bigchain_fulfill_and_serialize 
+  * void bigchain_fulfill_and_serialize
   * Execute bigchain_fulfill and bigchain_serialize for a given transaction input.
   * @param tx A pointer to BIGCHAIN_TX struct.
   * @param json_tx Transaction as JSON string.
@@ -105,7 +111,7 @@ void bigchain_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen);
 void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig, uint8_t *pub_key, uint8_t input_index);
 
 /**
-  * void bigchain_sign_transaction 
+  * void bigchain_sign_transaction
   * Takes a json string, hashes it sha3_256 and signs it with ed25519.
   * @param json_tx Transaction as JSON string.
   * @param len Transaction's length
@@ -142,7 +148,7 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx);
   * Handles JSON transaction inputs prepared by bigchain driver
   * @param json_obj A valid handler of a json object.
   * @param inputs A pointer to BIGCHAIN_INPUT array.
-  * @return Inputs count. 
+  * @return Inputs count.
   */
 int bigchain_parse_inputs(const json_t *json_obj, BIGCHAIN_INPUT *inputs);
 
@@ -150,7 +156,7 @@ int bigchain_parse_inputs(const json_t *json_obj, BIGCHAIN_INPUT *inputs);
   * Handles JSON transaction outputs prepared by bigchain driver
   * @param json_obj A valid handler of a json object.
   * @param outputs A pointer to BIGCHAIN_OUTPUT array.
-  * @return Outputs count. 
+  * @return Outputs count.
   */
 int bigchain_parse_outputs(const json_t *json_obj, BIGCHAIN_OUTPUT *outputs);
 
@@ -159,35 +165,35 @@ int bigchain_parse_outputs(const json_t *json_obj, BIGCHAIN_OUTPUT *outputs);
   * @param json_obj A valid handler of a json object.
   * @param field_name Should be asset or metadata
   * @param output A pointer to char array.
-  * @return json_obj length 
+  * @return json_obj length
   */
 int bigchain_parse_field(const json_t *json_obj, const char* field_name, char* output);
 
 /** bool bigchain_parse_json
   * Handles JSON transaction prepared by bigchain driver.
   * As json_tx will be modified, you might need to provide a copy as input.
-  * @param json_tx The transaction as stringified JSON 
+  * @param json_tx The transaction as stringified JSON
   * @param tx A pointer to BIGCHAIN_TX struct.
-  * @return Success or failure. 
+  * @return Success or failure.
   */
 bool bigchain_parse_json(char *json_tx, BIGCHAIN_TX *tx);
 
 /** bool prepare_tx
   * when 'operation' is CREATE then 'asset' can be arbitrary. (The keys on the JSON must be in alphabetical order),
   * but when 'operation' is TRANSFER then 'asset' must be the transaction id of the asset which is to be tranfered.
-  * 
+  *
   * No spaces in the json structure: {"key 1": "value a"} becomes '{"key 1":"value a"}'
   * Keys should be alphabetically ordered: {"key 1":"value a","A key":"A value"} becomes {"A key":"A value","key 1":"value a"}
   * No numbers fields, only strings {"key 1":2.3123} becomes {"key 1":"2.3123"}
-  * 
+  *
   * eg: asset input should be formatted like {"asset":{"data":{...}}} or {"asset":{"id":""}}
-  * 
+  *
   * @param tx A pointer to BIGCHAIN_TX struct.
   * @param operation can be either 'C' or 'T' for CREATE and TRANSFER respectively.
   * @param asset JSON stringified transaction's asset.
   * @param metadata JSON stringified transaction's asset.
   * @param base_pubkey Private key base58 encoded as char array.
-  * @return Success or failure. 
+  * @return Success or failure.
   */
 bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata, char *base_pubkey);
 
