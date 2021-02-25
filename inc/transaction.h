@@ -106,9 +106,8 @@ void bigchain_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen);
   * @param maxlen Transaction's maximum length
   * @param priv_key Public key useable to verify signature as uint8_t array .
   * @param sig Transaction signature as uint8_t array
-  * @param input_index Transaction's input index to fulfill
   */
-void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig, uint8_t *pub_key, uint8_t input_index);
+void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig, uint8_t *pub_key);
 
 /**
   * void bigchain_sign_transaction
@@ -171,7 +170,9 @@ int bigchain_parse_field(const json_t *json_obj, const char* field_name, char* o
 
 /** bool bigchain_parse_json
   * Handles JSON transaction prepared by bigchain driver.
-  * As json_tx will be modified, you might need to provide a copy as input.
+  *
+  * WARNING: The json_tx argument should be writable as it will be modified during deserialization.
+  *
   * @param json_tx The transaction as stringified JSON
   * @param tx A pointer to BIGCHAIN_TX struct.
   * @return Success or failure.
@@ -179,14 +180,17 @@ int bigchain_parse_field(const json_t *json_obj, const char* field_name, char* o
 bool bigchain_parse_json(char *json_tx, BIGCHAIN_TX *tx);
 
 /** bool prepare_tx
-  * when 'operation' is CREATE then 'asset' can be arbitrary. (The keys on the JSON must be in alphabetical order),
+  * when 'operation' is CREATE then 'asset' can be arbitrary,
   * but when 'operation' is TRANSFER then 'asset' must be the transaction id of the asset which is to be tranfered.
   *
   * No spaces in the json structure: {"key 1": "value a"} becomes '{"key 1":"value a"}'
+  *
   * Keys should be alphabetically ordered: {"key 1":"value a","A key":"A value"} becomes {"A key":"A value","key 1":"value a"}
   * No numbers fields, only strings {"key 1":2.3123} becomes {"key 1":"2.3123"}
   *
   * eg: asset input should be formatted like {"asset":{"data":{...}}} or {"asset":{"id":""}}
+  *
+  * WARNING: The asset and metadata arguments should be writable as they will be modified during deserialization.
   *
   * @param tx A pointer to BIGCHAIN_TX struct.
   * @param operation can be either 'C' or 'T' for CREATE and TRANSFER respectively.
@@ -198,15 +202,14 @@ bool bigchain_parse_json(char *json_tx, BIGCHAIN_TX *tx);
 bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metadata, char *base_pubkey);
 
 /** void fulfill_tx
-  * Fulfill a prepared transaction's input with a given key pair and serialize the transaction.
+  * Fulfill a prepared transaction's input (default to index 0) with a given key pair and serialize the transaction.
   * @param tx A pointer to BIGCHAIN_TX struct.
   * @param priv_key Public key as uint8_t array .
   * @param pub_key Private key as uint8_t array.
   * @param json A uint8_t array that will contain serialized JSON transaction.
   * @param maxlen A uint16_t indicating max length of the output JSON.
-  * @param input_index A uint8_t indicating which input to fulfill.
   */
-void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index);
+void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen);
 
 /** void partial_fulfill_tx
   *  Used to create fulfillement for each input with different key pair.

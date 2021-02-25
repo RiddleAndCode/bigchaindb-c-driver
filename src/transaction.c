@@ -116,8 +116,8 @@ void bigchain_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen) {
   bigchain_build_json_tx(tx, (char*)json_tx);
 }
 
-void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig, uint8_t *pub_key, uint8_t input_index) {
-  bigchain_fulfill(tx, sig, pub_key, input_index);
+void bigchain_fulfill_and_serialize(BIGCHAIN_TX *tx, uint8_t *json_tx, uint16_t maxlen, uint8_t *sig, uint8_t *pub_key) {
+  bigchain_fulfill(tx, sig, pub_key, 0);
   bigchain_serialize(tx, json_tx, maxlen);
 }
 
@@ -337,8 +337,9 @@ bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   return true;
 }
 
-void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index) {
+void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen) {
   uint8_t sig[140] = {0};
+  uint8_t input_index = 0;
   bigchain_build_json_tx(tx, (char*)json);
   if (strcmp(tx->operation, "TRANSFER") == 0) {
     // For TRANSFER the json string must be concatenated with the input tx_id and the output_index
@@ -349,7 +350,7 @@ void fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *j
   }
 
   bigchain_sign_transaction((uint8_t *)json, strlen((char*)json), (uint8_t *)priv_key, (uint8_t *)pub_key, (uint8_t *)sig);
-  bigchain_fulfill_and_serialize(tx, (uint8_t *)json, maxlen, (uint8_t *)sig, (uint8_t *)pub_key, input_index);
+  bigchain_fulfill_and_serialize(tx, (uint8_t *)json, maxlen, (uint8_t *)sig, (uint8_t *)pub_key);
 }
 
 void partial_fulfill_tx(BIGCHAIN_TX *tx, uint8_t *priv_key, uint8_t *pub_key, uint8_t *json, uint16_t maxlen, uint8_t input_index) {
@@ -393,13 +394,7 @@ int bigchain_parse_inputs(const json_t* json_obj, BIGCHAIN_INPUT *inputs) {
         if (transaction_id) {
           inputs[i].fulfills.output_index = output_index;
           memcpy(inputs[i].fulfills.transaction_id, transaction_id, strlen(transaction_id));
-        } else {
-          // memset(inputs[i].fulfills.transaction_id, 0, 65);
-          // inputs[i].fulfills.output_index = NULL;
         }
-      } else {
-        // memset(inputs[i].fulfills.transaction_id, 0, 65);
-        // inputs[i].fulfills.output_index = NULL;
       }
 
       // OWNERS_BEFORE
@@ -512,6 +507,7 @@ static char *bigchain_parse_object(const json_t *json, char *str, const char *na
     } else {
       const char *value = json_getValue(child);
       if (value) {
+        // TODO: do types checks to allow parsing as int or boolean
         if (value[0] != '\0') {
           p = json_str(p, child_name, value);
         } else {
