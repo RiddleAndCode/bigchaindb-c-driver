@@ -115,7 +115,7 @@ void test_bigchain_create_tx() {
   prepare_tx(&tx, TEST_OPERATION_CREATE, asset_clone, metadata_clone, base58_pubkey );
   free(metadata_clone);
   free(asset_clone);
-  fulfill_tx(&tx, privkey, pubkey, json, 3000, 0);
+  fulfill_tx(&tx, privkey, pubkey, json, 3000);
   TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
 
@@ -124,15 +124,31 @@ void test_bigchain_transfer_tx() {
   char json[2000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
   char *asset_clone = malloc(strlen(test_transfer_asset));
-  memcpy(asset_clone, test_create_asset, strlen(test_transfer_asset));
+  memcpy(asset_clone, test_transfer_asset, strlen(test_transfer_asset));
   char *metadata_clone = malloc(sizeof(test_metadata));
   memcpy(metadata_clone, test_metadata, strlen(test_metadata));
   prepare_tx(&tx, TEST_OPERATION_TRANSFER, asset_clone, metadata_clone, base58_pubkey ) ;
   free(metadata_clone);
   free(asset_clone);
-  fulfill_tx(&tx, privkey, pubkey, json, 2000, 0);
+  fulfill_tx(&tx, privkey, pubkey, json, 2000);
   TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
+
+void test_bigchain_partial_fullfil_create_tx() {
+  BIGCHAIN_TX tx;
+  char json[3000] = {0};
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
+  char *asset_clone = malloc(strlen(test_create_asset));
+  memcpy(asset_clone, test_create_asset, strlen(test_create_asset));
+  char *metadata_clone = malloc(strlen(test_metadata));
+  memcpy(metadata_clone, test_metadata, strlen(test_metadata));
+  prepare_tx(&tx, TEST_OPERATION_CREATE, asset_clone, metadata_clone, base58_pubkey );
+  free(metadata_clone);
+  free(asset_clone);
+  partial_fulfill_tx(&tx, privkey, pubkey, json, 3000, 0);
+  TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
+}
+
 
 void test_b58tobin() {
   size_t binsz = 32 ;
@@ -150,7 +166,8 @@ void test_bigchain_parse_json() {
   memcpy(json, C_tx_json, strlen(C_tx_json));
   bigchain_parse_json(json, &tx);
   TEST_ASSERT_EQUAL_STRING("c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53", tx.id);
-  // TODO: add more assertion
+  TEST_ASSERT_EQUAL_STRING("pGSAIFF_tz4ZAIVevbwN2MkUqGDA61cu-NZmETju56pw2KFGgUCmgJRLPtDZ-lDNorv6mS7lViZ5TkNI4lW_CSc0Ox3W3Gf4Bu7_kVV4t0QF7vUvArdrk49HEVvjGngWDIBZTC4N", tx.inputs[0].fulfillment);
+  TEST_ASSERT_EQUAL_STRING("1", tx.outputs[0].amount);
 }
 
 int main(void) {
@@ -161,6 +178,7 @@ int main(void) {
   RUN_TEST(test_bigchain_build_json_outputs);
   RUN_TEST(test_bigchain_create_tx);
   RUN_TEST(test_bigchain_transfer_tx);
+  RUN_TEST(test_bigchain_partial_fullfil_create_tx);
   RUN_TEST(test_b58tobin);
   RUN_TEST(test_bigchain_parse_json);
   return UNITY_END();
