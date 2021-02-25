@@ -1,12 +1,11 @@
 #include "tests.h"
 
-#define TEST_CREATE_ASSET	"\"data\":{\"bicycle\":{\"manufacturer\":\"bkfab\",\"serial_number\":\"abcd1234\"}}"
-#define TEST_TRANSFER_ASSET "c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53"
-#define TEST_METADATA "\"planet\":\"earth\""
+#define TEST_ASSET_ID "c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53"
 #define TEST_OPERATION_CREATE 'C'
 #define TEST_OPERATION_TRANSFER 'T'
 #define TEST_VERSION "2.0"
 #define TEST_OWNER_BEFORE "6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9"
+#define TEST_CONDITION_TYPE "ed25519-sha-256"
 #define TEST_INPUTS_CREATE "\"inputs\":[{\"fulfillment\":null,\"fulfills\":null,\"owners_before\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}]"
 #define TEST_INPUTS_TRANSFER "\"inputs\":[{\"fulfillment\":null,\"fulfills\":{\"output_index\":0,\"transaction_id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"},\"owners_before\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}]"
 #define TEST_OUTPUTS "\"outputs\":[{\"amount\":\"1\",\"condition\":{\"details\":{\"public_key\":\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\",\"type\":\"ed25519-sha-256\"},\"uri\":\"ni:///sha-256;WVm8YmcTjv05Osmho-Hc7o6N2Hg0YvgsKdaidCaRb0Q?fpt=ed25519-sha-256&cost=131072\"},\"public_keys\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}]"
@@ -21,6 +20,10 @@ static const char* T_tx_json =
   "{\"asset\":{\"id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"},\"id\":\"5123d5c81b2af437b7ef86c74a151ac586e63d7d8070ec48775343af2ae454c7\",\"inputs\":[{\"fulfillment\":\"pGSAIFF_tz4ZAIVevbwN2MkUqGDA61cu-NZmETju56pw2KFGgUDQL6TudNolIANPFj6A47CiswYHYXsHE2wUrWKHkA2IsuVOjK0ajZXQOqWTWFEcXgF2F8cqqTjOiDeAUGPP_xQE\",\"fulfills\":{\"output_index\":0,\"transaction_id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"},\"owners_before\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}],\"metadata\":{\"planet\":\"earth\"},\"operation\":\"TRANSFER\",\"outputs\":[{\"amount\":\"1\",\"condition\":{\"details\":{\"public_key\":\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\",\"type\":\"ed25519-sha-256\"},\"uri\":\"ni:///sha-256;WVm8YmcTjv05Osmho-Hc7o6N2Hg0YvgsKdaidCaRb0Q?fpt=ed25519-sha-256&cost=131072\"},\"public_keys\":[\"6V8ycJdv7kPiXpAhCgk6YPrmc35yMnCCvxP4YnGzvhp9\"]}],\"version\":\"2.0\"}";
 
 
+static const char test_create_asset[] = "{\"asset\":{\"data\":{\"bicycle\":{\"manufacturer\":\"bkfab\",\"serial_number\":\"abcd1234\"}}}}";
+static const char test_transfer_asset[] = "{\"asset\":{\"id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"}}";
+static const char test_metadata[] = "{\"metadata\":{\"planet\":\"earth\"}}";
+
 
 char privkey[] = {'\x80', '\x8c', '\xeb', '\x78', '\x8f', '\x3e', '\x2b', '\xe7', '\x67', '\x7a', '\xd6', '\x5f', '\x96', '\x93', '\xb2', '\x3a', '\x64', '\xd7', '\x00', '\xb3', '\x4b', '\xcc', '\xad', '\xdd', '\x03', '\xf2', '\x2d', '\x3e', '\x32', '\x35', '\xf1', '\x1d'};
 char pubkey[]  = {'\x51', '\x7f', '\xb7', '\x3e', '\x19', '\x00', '\x85', '\x5e', '\xbd', '\xbc', '\x0d', '\xd8', '\xc9', '\x14', '\xa8', '\x60', '\xc0', '\xeb', '\x57', '\x2e', '\xf8', '\xd6', '\x66', '\x11', '\x38', '\xee', '\xe7', '\xaa', '\x70', '\xd8', '\xa1', '\x46'};
@@ -32,7 +35,8 @@ void prepare_inputs(char operation, BIGCHAIN_INPUT *inputs, uint8_t *num_inputs)
   // Fill input struct
   memcpy(inputs[0].owners_before[0], TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
   if(operation == 'T') {
-    strcpy(inputs[0].fulfills, "\"output_index\":0,\"transaction_id\":\"c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53\"" );
+    inputs[0].fulfills.output_index = 0;
+    strcpy(inputs[0].fulfills.transaction_id, "c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53");
   } else if(operation != 'C') {
     return;
   }
@@ -45,7 +49,8 @@ void prepare_outputs(BIGCHAIN_OUTPUT *outputs, uint8_t *num_outputs) {
 
   // Fill output struct
   outputs[0].amount[0] = '1';
-  memcpy(outputs[0].details_public_key, TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
+  memcpy(outputs[0].condition.details.type, TEST_CONDITION_TYPE, strlen(TEST_CONDITION_TYPE));
+  memcpy(outputs[0].condition.details.public_key, TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
   memcpy(outputs[0].public_keys[0], TEST_OWNER_BEFORE, strlen(TEST_OWNER_BEFORE));
   outputs[0].num_public_keys = 1;
   *num_outputs = 1;
@@ -103,8 +108,14 @@ void test_bigchain_create_tx() {
   BIGCHAIN_TX tx;
   char json[3000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx, TEST_OPERATION_CREATE, TEST_CREATE_ASSET, TEST_METADATA, base58_pubkey );
-  fulfill_tx(&tx, 0, privkey, pubkey, json, 3000 );
+  char *asset_clone = malloc(strlen(test_create_asset));
+  memcpy(asset_clone, test_create_asset, strlen(test_create_asset));
+  char *metadata_clone = malloc(strlen(test_metadata));
+  memcpy(metadata_clone, test_metadata, strlen(test_metadata));
+  prepare_tx(&tx, TEST_OPERATION_CREATE, asset_clone, metadata_clone, base58_pubkey );
+  free(metadata_clone);
+  free(asset_clone);
+  fulfill_tx(&tx, privkey, pubkey, json, 3000);
   TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
 }
 
@@ -112,10 +123,32 @@ void test_bigchain_transfer_tx() {
   BIGCHAIN_TX tx;
   char json[2000] = {0};
   memset(&tx, 0, sizeof(BIGCHAIN_TX));
-  prepare_tx(&tx, TEST_OPERATION_TRANSFER, TEST_TRANSFER_ASSET, TEST_METADATA, base58_pubkey ) ;
-  fulfill_tx(&tx, TEST_TRANSFER_ASSET, privkey, pubkey, json, 2000 );
+  char *asset_clone = malloc(strlen(test_transfer_asset));
+  memcpy(asset_clone, test_transfer_asset, strlen(test_transfer_asset));
+  char *metadata_clone = malloc(sizeof(test_metadata));
+  memcpy(metadata_clone, test_metadata, strlen(test_metadata));
+  prepare_tx(&tx, TEST_OPERATION_TRANSFER, asset_clone, metadata_clone, base58_pubkey ) ;
+  free(metadata_clone);
+  free(asset_clone);
+  fulfill_tx(&tx, privkey, pubkey, json, 2000);
   TEST_ASSERT_EQUAL_STRING_LEN(T_tx_json, json, sizeof(T_tx_json));
 }
+
+void test_bigchain_partial_fullfil_create_tx() {
+  BIGCHAIN_TX tx;
+  char json[3000] = {0};
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
+  char *asset_clone = malloc(strlen(test_create_asset));
+  memcpy(asset_clone, test_create_asset, strlen(test_create_asset));
+  char *metadata_clone = malloc(strlen(test_metadata));
+  memcpy(metadata_clone, test_metadata, strlen(test_metadata));
+  prepare_tx(&tx, TEST_OPERATION_CREATE, asset_clone, metadata_clone, base58_pubkey );
+  free(metadata_clone);
+  free(asset_clone);
+  partial_fulfill_tx(&tx, privkey, pubkey, json, 3000, 0);
+  TEST_ASSERT_EQUAL_STRING_LEN(C_tx_json, json, sizeof(C_tx_json));
+}
+
 
 void test_b58tobin() {
   size_t binsz = 32 ;
@@ -126,6 +159,17 @@ void test_b58tobin() {
   TEST_ASSERT_EQUAL_INT8_ARRAY( pubkey, pubkey_test, 32 );
 }
 
+void test_bigchain_parse_json() {
+  BIGCHAIN_TX tx;
+  char json[3000] = {0};
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
+  memcpy(json, C_tx_json, strlen(C_tx_json));
+  bigchain_parse_json(json, &tx);
+  TEST_ASSERT_EQUAL_STRING("c81699a3713b36ac7b06b48bd0dbe2fb394428e1600d7e60c41207a3dae7ae53", tx.id);
+  TEST_ASSERT_EQUAL_STRING("pGSAIFF_tz4ZAIVevbwN2MkUqGDA61cu-NZmETju56pw2KFGgUCmgJRLPtDZ-lDNorv6mS7lViZ5TkNI4lW_CSc0Ox3W3Gf4Bu7_kVV4t0QF7vUvArdrk49HEVvjGngWDIBZTC4N", tx.inputs[0].fulfillment);
+  TEST_ASSERT_EQUAL_STRING("1", tx.outputs[0].amount);
+}
+
 int main(void) {
   test_b58tobin();
   UNITY_BEGIN();
@@ -134,6 +178,8 @@ int main(void) {
   RUN_TEST(test_bigchain_build_json_outputs);
   RUN_TEST(test_bigchain_create_tx);
   RUN_TEST(test_bigchain_transfer_tx);
+  RUN_TEST(test_bigchain_partial_fullfil_create_tx);
   RUN_TEST(test_b58tobin);
+  RUN_TEST(test_bigchain_parse_json);
   return UNITY_END();
 }
