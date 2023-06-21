@@ -1,6 +1,6 @@
 #ifndef _BIGCHAIN_TX_H_
 #define _BIGCHAIN_TX_H_
-#define BDB_VERSION "2.0"
+#define BDB_VERSION "3.0"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>

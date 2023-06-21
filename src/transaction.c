@@ -227,8 +227,11 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
   p = json_objOpen(p, NULL);
 
   // ASSET
-  p = atoa(p, tx->asset);
-  p = atoa(p, ",");
+  p = json_arrOpen(p, "assets");   
+  p = json_objOpen(p, NULL);   
+  p = json_str(p, "data", tx->asset);
+  p = json_objClose(p);
+  p = json_arrClose(p);
 
   // ID
   if (tx->id[0] != '\0') {
@@ -241,8 +244,13 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
   p = bigchain_build_json_inputs(tx->inputs, tx->num_inputs, p);
 
   // METADATA
-  p = atoa(p, tx->metadata);
-  p = atoa(p, ",");
+  if (tx->metadata[0] != '\0') {
+    p = atoa(p, tx->metadata);
+    p = atoa(p, ",");
+  } else {
+    p = json_null(p, "metadata");
+    // p = json_str(p, "metadata", "None");
+  }
 
   // OPERATION
   p = json_str(p, "operation", tx->operation);
@@ -260,22 +268,11 @@ bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   memzero(tx, sizeof(BIGCHAIN_TX));
 
   // ASSET
-  json_t asset_mem[48];
-  const json_t *asset_obj = json_create(asset, asset_mem, sizeof asset_mem / sizeof *asset_mem);
-  if (!asset_obj) {
-    parse_json_invalid("asset");
+  if(strlen(asset) > sizeof(tx->asset)){
+    parse_json_invalid_length(strlen(asset), sizeof(tx->asset));
     return false;
   }
-
-  char parsed_asset[ASSET_MAX_SIZE];
-  int len = bigchain_parse_field(asset_obj, "asset", parsed_asset);
-  if (len == 0) {
-    return false;
-  } else if (len >= sizeof parsed_asset) {
-    parse_json_invalid_length(len, (int)sizeof parsed_asset - 1);
-    return false;
-  }
-  memcpy(tx->asset, parsed_asset, len);
+  strcpy(tx->asset, asset);
 
   // INPUTS
   memset(tx->inputs, 0, sizeof(BIGCHAIN_INPUT));
@@ -283,42 +280,15 @@ bool prepare_tx(BIGCHAIN_TX *tx, const char operation, char *asset, char *metada
   tx->inputs[0].num_owners = 1;
   tx->num_inputs = 1;
 
-  const json_t *asset_field = json_getProperty(asset_obj, "asset");
   if (operation == 'C') {
     memcpy(tx->operation, "CREATE", strlen("CREATE"));
-    const json_t *asset_data_field = json_getProperty(asset_field, "data");
-    if (!asset_data_field || JSON_OBJ != json_getType(asset_data_field)) {
-      parse_json_property_missing("asset.data");
-      return false;
-    }
   } else if (operation == 'T') {
     memcpy(tx->operation, "TRANSFER", strlen("TRANSFER"));
-    const char* asset_id = json_getPropertyValue(asset_field, "id");
-    if (!asset_id) {
-      parse_json_property_missing("asset.id");
-      return false;
-    }
-    tx->inputs[0].fulfills.output_index = 0;
-    memcpy(tx->inputs[0].fulfills.transaction_id, asset_id, strlen(asset_id));
   }
 
   // METADATA
-  json_t metadata_mem[48];
-  const json_t *metadata_obj = json_create(metadata, metadata_mem, sizeof metadata_mem / sizeof *metadata_mem);
-  if (!metadata_obj) {
-    parse_json_invalid("metadata");
-    return false;
-  }
-
-  char parsed_metadata[METADATA_MAX_SIZE];
-  len = bigchain_parse_field(metadata_obj, "metadata", parsed_metadata);
-  if (len == 0) {
-    return false;
-  } else if (len >= sizeof parsed_metadata) {
-    parse_json_invalid_length(len, (int)sizeof parsed_metadata - 1);
-    return false;
-  }
-  memcpy(tx->metadata, parsed_metadata, len);
+  if(metadata)
+    strcpy(tx->metadata, metadata);
 
   // VERSION
   memcpy(tx->version, BDB_VERSION, strlen(BDB_VERSION));

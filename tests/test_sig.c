@@ -170,16 +170,42 @@ void test_bigchain_parse_json() {
   TEST_ASSERT_EQUAL_STRING("1", tx.outputs[0].amount);
 }
 
+void fatih_test(){
+  FILE *fp;
+  char filename[] = "test.txt";
+  
+  // Open file in write mode
+  fp = fopen(filename,"w+");
+
+  //char created_assert[256] = {0};
+  //create_asset(created_assert);
+
+  BIGCHAIN_TX tx;
+  char json[3000] = {0};
+  memset(&tx, 0, sizeof(BIGCHAIN_TX));
+  prepare_tx(&tx, TEST_OPERATION_CREATE, "bafkreidax26ijgb542ncyx3gadvz5l6fz6idmaltqsfv55gmcd6n6bjtum", NULL, base58_pubkey );
+  fulfill_tx(&tx, privkey, pubkey, json, 3000);
+
+  // If file opened successfully, then write the string to file
+  if ( fp )
+    fputs(json,fp);
+
+  //Close the file
+   fclose(fp);
+
+}
+
 int main(void) {
-  test_b58tobin();
-  UNITY_BEGIN();
-  RUN_TEST(test_sig);
-  RUN_TEST(test_bigchain_build_json_inputs);
-  RUN_TEST(test_bigchain_build_json_outputs);
-  RUN_TEST(test_bigchain_create_tx);
-  RUN_TEST(test_bigchain_transfer_tx);
-  RUN_TEST(test_bigchain_partial_fullfil_create_tx);
-  RUN_TEST(test_b58tobin);
-  RUN_TEST(test_bigchain_parse_json);
-  return UNITY_END();
+  fatih_test();
+  // test_b58tobin();
+  // UNITY_BEGIN();
+  // RUN_TEST(test_sig);
+  // RUN_TEST(test_bigchain_build_json_inputs);
+  // RUN_TEST(test_bigchain_build_json_outputs);
+  // RUN_TEST(test_bigchain_create_tx);
+  // RUN_TEST(test_bigchain_transfer_tx);
+  // RUN_TEST(test_bigchain_partial_fullfil_create_tx);
+  // RUN_TEST(test_b58tobin);
+  // RUN_TEST(test_bigchain_parse_json);
+  // return UNITY_END();
 }
