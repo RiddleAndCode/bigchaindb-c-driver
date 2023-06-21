@@ -248,8 +248,8 @@ void bigchain_build_json_tx(BIGCHAIN_TX *tx, char *json_tx) {
     p = atoa(p, tx->metadata);
     p = atoa(p, ",");
   } else {
-    p = json_null(p, "metadata");
-    // p = json_str(p, "metadata", "None");
+    // p = json_null(p, "metadata");
+    p = json_str(p, "metadata", "None");
   }
 
   // OPERATION
